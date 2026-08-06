@@ -4,6 +4,7 @@ using ComplianceGuard.Application.Anomalies;
 using ComplianceGuard.Application.Transfers;
 using ComplianceGuard.Domain.Abstractions;
 using ComplianceGuard.Infrastructure.Ai;
+using ComplianceGuard.Infrastructure.Ai.Workflows;
 using ComplianceGuard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<ITransferRepository, DapperTransferRepository>();
 builder.Services.AddSingleton(sp => SemanticKernelFactory.Create(sp));
+builder.Services.AddSingleton(sp => ComplianceWorkflowFactory.Create(sp));
 builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionAgent>();
 builder.Services.AddScoped<RecordTransferHandler>();
 builder.Services.AddScoped<GetPackageTransferHistoryHandler>();

@@ -1,6 +1,9 @@
 using ComplianceGuard.Application.Anomalies;
 using ComplianceGuard.Domain.Entities;
+using ComplianceGuard.Infrastructure.Ai.Plugins;
+using ComplianceGuard.Infrastructure.Ai.Workflows;
 using ComplianceGuard.Infrastructure.Persistence;
+using Microsoft.Agents.AI.Workflows;
 using Microsoft.EntityFrameworkCore;
 
 namespace ComplianceGuard.Api.Endpoints;
@@ -61,6 +64,83 @@ public static class AnomalyReviewEndpoints
             return Results.Ok(new ScanResponse(anomalies.Count, anomalies.Select(ToResponse).ToList()));
         });
 
+        group.MapPost("/workflow-scan", async (Workflow workflow, AppDbContext db) =>
+        {
+            var transfers = await db.Transfers
+                .Include(t => t.Facility)
+                .Include(t => t.TransferPackages).ThenInclude(tp => tp.Package)
+                .ToListAsync();
+
+            var facilities = await db.Facilities.IgnoreQueryFilters().ToListAsync();
+            var facilityLookup = facilities.ToDictionary(f => f.LicenseNumber);
+
+            var facilityId = transfers.FirstOrDefault()?.FacilityId ?? Guid.Empty;
+            var transferDtos = transfers.Select(t =>
+            {
+                facilityLookup.TryGetValue(t.RecipientFacilityLicenseNumber, out var recipient);
+                return new TransferDto
+                {
+                    TransferId = t.Id,
+                    FacilityId = t.FacilityId,
+                    ManifestNumber = t.ManifestNumber,
+                    PackageCount = t.PackageCount,
+                    ActualPackageCount = t.TransferPackages?.Count,
+                    EstimatedDepartureAt = t.EstimatedDepartureAt,
+                    EstimatedArrivalAt = t.EstimatedArrivalAt,
+                    ActualDepartureAt = t.ActualDepartureAt,
+                    ActualArrivalAt = t.ActualArrivalAt,
+                    Status = t.Status,
+                    ShipperLatitude = t.Facility?.Latitude ?? 0,
+                    ShipperLongitude = t.Facility?.Longitude ?? 0,
+                    RecipientLatitude = recipient?.Latitude ?? 0,
+                    RecipientLongitude = recipient?.Longitude ?? 0
+                };
+            }).ToList();
+
+            var scanRequest = new ComplianceScanRequest(transferDtos, facilityId);
+
+            var run = await InProcessExecution.RunAsync(workflow, scanRequest);
+
+            ComplianceReport? report = null;
+            foreach (var evt in run.NewEvents)
+            {
+                if (evt is ExecutorCompletedEvent completed && completed.Data is ComplianceReport r)
+                    report = r;
+            }
+
+            if (report is null)
+                return Results.Problem("Workflow produced no output");
+
+            if (report.Anomalies.Count > 0)
+            {
+                var flags = report.Anomalies.Select(a => new AnomalyFlag
+                {
+                    Id = Guid.NewGuid(),
+                    FacilityId = facilityId,
+                    TransferId = a.TransferId,
+                    PackageId = a.PackageId,
+                    AnomalyType = a.AnomalyType,
+                    Description = a.Description,
+                    Severity = a.Severity,
+                    IsResolved = false,
+                    DetectedAt = DateTime.UtcNow
+                }).ToList();
+
+                db.AnomalyFlags.AddRange(flags);
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new WorkflowScanResponse(
+                report.Status,
+                report.Summary,
+                report.Anomalies.Count,
+                report.RiskAssessment,
+                report.Anomalies.Select(a => new AnomalyResponse(
+                    Guid.NewGuid(), facilityId, a.TransferId, a.PackageId,
+                    a.AnomalyType, a.Description, a.Severity,
+                    false, null, DateTime.UtcNow, null)).ToList()));
+        });
+
         return routes;
     }
 
@@ -71,6 +151,13 @@ public static class AnomalyReviewEndpoints
 }
 
 public record ScanResponse(int AnomaliesDetected, List<AnomalyResponse> Anomalies);
+
+public record WorkflowScanResponse(
+    string Status,
+    string Summary,
+    int AnomaliesDetected,
+    string? RiskAssessment,
+    List<AnomalyResponse> Anomalies);
 
 public record ResolveAnomalyRequest(string Resolution);
 
