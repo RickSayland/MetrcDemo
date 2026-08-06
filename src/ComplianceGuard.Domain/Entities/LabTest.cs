@@ -10,4 +10,6 @@ public class LabTest
     public DateTime ResultDate { get; set; }
     public string LabFacilityName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+
+    public Package Package { get; set; } = null!;
 }

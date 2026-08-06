@@ -28,6 +28,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    await DataSeeder.SeedAsync(app.Services);
 }
 
 app.UseMiddleware<TenantResolutionMiddleware>();

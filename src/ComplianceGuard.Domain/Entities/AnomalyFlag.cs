@@ -13,4 +13,7 @@ public class AnomalyFlag
     public string? Resolution { get; set; }
     public DateTime DetectedAt { get; set; }
     public DateTime? ResolvedAt { get; set; }
+
+    public Transfer? Transfer { get; set; }
+    public Package? Package { get; set; }
 }

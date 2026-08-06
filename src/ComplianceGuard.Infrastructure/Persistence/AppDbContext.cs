@@ -17,12 +17,15 @@ public class AppDbContext : DbContext
     public DbSet<Facility> Facilities => Set<Facility>();
     public DbSet<Package> Packages => Set<Package>();
     public DbSet<Transfer> Transfers => Set<Transfer>();
+    public DbSet<TransferPackage> TransferPackages => Set<TransferPackage>();
     public DbSet<LabTest> LabTests => Set<LabTest>();
     public DbSet<AnomalyFlag> AnomalyFlags => Set<AnomalyFlag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         modelBuilder.Entity<Package>().HasQueryFilter(p => p.FacilityId == _tenantContext.TenantId);
         modelBuilder.Entity<Transfer>().HasQueryFilter(t => t.FacilityId == _tenantContext.TenantId);

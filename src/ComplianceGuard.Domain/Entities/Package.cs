@@ -6,10 +6,15 @@ public class Package
     public Guid FacilityId { get; set; }
     public string Tag { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
+    public string ItemCategory { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
     public string UnitOfMeasure { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string? LabTestStatus { get; set; }
     public DateTime PackagedDate { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public Facility Facility { get; set; } = null!;
+    public ICollection<LabTest> LabTests { get; set; } = [];
+    public ICollection<TransferPackage> TransferPackages { get; set; } = [];
 }

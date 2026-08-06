@@ -19,4 +19,8 @@ public class Transfer
     public DateTime? ActualArrivalAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+
+    public Facility Facility { get; set; } = null!;
+    public ICollection<TransferPackage> TransferPackages { get; set; } = [];
+    public ICollection<AnomalyFlag> AnomalyFlags { get; set; } = [];
 }
