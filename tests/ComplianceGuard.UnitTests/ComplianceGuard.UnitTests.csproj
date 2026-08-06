@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ComplianceGuard.Domain\ComplianceGuard.Domain.csproj" />
     <ProjectReference Include="..\..\src\ComplianceGuard.Application\ComplianceGuard.Application.csproj" />
+    <ProjectReference Include="..\..\src\ComplianceGuard.Infrastructure\ComplianceGuard.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
