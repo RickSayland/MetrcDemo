@@ -10,6 +10,7 @@ public static class DataSeeder
     public static readonly Guid PortlandFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000001");
     public static readonly Guid EugeneFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000002");
     public static readonly Guid BendLabFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000003");
+    public static readonly Guid SanFranciscoFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000004");
 
     public static async Task SeedAsync(IServiceProvider services)
     {
@@ -20,21 +21,16 @@ public static class DataSeeder
         if (await db.Facilities.AnyAsync())
             return;
 
-        var facilities = CreateFacilities();
-        db.Facilities.AddRange(facilities);
+        await SeedAsync(db);
+    }
 
-        var packages = CreatePackages();
-        db.Packages.AddRange(packages);
-
-        var transfers = CreateTransfers();
-        db.Transfers.AddRange(transfers);
-
-        var transferPackages = CreateTransferPackages();
-        db.TransferPackages.AddRange(transferPackages);
-
-        var labTests = CreateLabTests();
-        db.LabTests.AddRange(labTests);
-
+    public static async Task SeedAsync(AppDbContext db)
+    {
+        db.Facilities.AddRange(CreateFacilities());
+        db.Packages.AddRange(CreatePackages());
+        db.Transfers.AddRange(CreateTransfers());
+        db.TransferPackages.AddRange(CreateTransferPackages());
+        db.LabTests.AddRange(CreateLabTests());
         await db.SaveChangesAsync();
     }
 
@@ -78,6 +74,19 @@ public static class DataSeeder
             Longitude = -121.3153,
             IsActive = true,
             CreatedAt = new DateTime(2024, 2, 1, 0, 0, 0, DateTimeKind.Utc)
+        },
+        new()
+        {
+            Id = SanFranciscoFacilityId,
+            LicenseNumber = "CA-RET-00412",
+            Name = "Bay Area Cannabis Co",
+            FacilityType = "Retailer",
+            State = "CA",
+            City = "San Francisco",
+            Latitude = 37.7749,
+            Longitude = -122.4194,
+            IsActive = true,
+            CreatedAt = new DateTime(2024, 3, 10, 0, 0, 0, DateTimeKind.Utc)
         }
     ];
 
@@ -158,12 +167,29 @@ public static class DataSeeder
             LabTestStatus = "TestPassed",
             PackagedDate = new DateTime(2024, 5, 20, 0, 0, 0, DateTimeKind.Utc),
             CreatedAt = new DateTime(2024, 5, 20, 0, 0, 0, DateTimeKind.Utc)
+        },
+        new()
+        {
+            Id = Pkg6,
+            FacilityId = PortlandFacilityId,
+            Tag = "1A4010300003B01000006",
+            ItemName = "Gorilla Glue #4 - Concentrate",
+            ItemCategory = "Concentrate",
+            Quantity = 56.6990m,
+            UnitOfMeasure = "Grams",
+            Status = "Received",
+            LabTestStatus = "TestPassed",
+            PackagedDate = new DateTime(2024, 6, 20, 0, 0, 0, DateTimeKind.Utc),
+            CreatedAt = new DateTime(2024, 6, 20, 0, 0, 0, DateTimeKind.Utc)
         }
     ];
+
+    private static readonly Guid Pkg6 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000006");
 
     private static readonly Guid Transfer1 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000001");
     private static readonly Guid Transfer2 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000002");
     private static readonly Guid Transfer3 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000003");
+    private static readonly Guid Transfer4 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000004");
 
     private static List<Transfer> CreateTransfers() =>
     [
@@ -207,7 +233,7 @@ public static class DataSeeder
             Status = "InTransit",
             CreatedAt = new DateTime(2024, 6, 17, 0, 0, 0, DateTimeKind.Utc)
         },
-        // Suspicious transfer: 2.5h route took 72 hours — possible diversion
+        // Suspicious: 2.5h route took 72 hours — possible diversion + 3 packages missing
         new()
         {
             Id = Transfer3,
@@ -227,6 +253,27 @@ public static class DataSeeder
             ActualArrivalAt = new DateTime(2024, 6, 25, 7, 5, 0, DateTimeKind.Utc),
             Status = "Received",
             CreatedAt = new DateTime(2024, 6, 21, 0, 0, 0, DateTimeKind.Utc)
+        },
+        // Suspicious: Portland to San Francisco (635 mi) in 30 min — physically impossible
+        new()
+        {
+            Id = Transfer4,
+            FacilityId = PortlandFacilityId,
+            ManifestNumber = "OR-MAN-2024-001625",
+            ShipperFacilityLicenseNumber = "OR-CUL-00142",
+            ShipperFacilityName = "Emerald Valley Cultivation",
+            RecipientFacilityLicenseNumber = "CA-RET-00412",
+            RecipientFacilityName = "Bay Area Cannabis Co",
+            TransporterName = "West Coast Logistics",
+            DriverName = "Alex Rivera",
+            VehicleLicensePlate = "CA-TRK-3345",
+            PackageCount = 1,
+            EstimatedDepartureAt = new DateTime(2024, 6, 28, 6, 0, 0, DateTimeKind.Utc),
+            EstimatedArrivalAt = new DateTime(2024, 6, 28, 16, 0, 0, DateTimeKind.Utc),
+            ActualDepartureAt = new DateTime(2024, 6, 28, 6, 0, 0, DateTimeKind.Utc),
+            ActualArrivalAt = new DateTime(2024, 6, 28, 6, 30, 0, DateTimeKind.Utc),
+            Status = "Received",
+            CreatedAt = new DateTime(2024, 6, 27, 0, 0, 0, DateTimeKind.Utc)
         }
     ];
 
@@ -236,7 +283,8 @@ public static class DataSeeder
         new() { TransferId = Transfer1, PackageId = Pkg2 },
         new() { TransferId = Transfer2, PackageId = Pkg3 },
         new() { TransferId = Transfer3, PackageId = Pkg1 },
-        new() { TransferId = Transfer3, PackageId = Pkg4 }
+        new() { TransferId = Transfer3, PackageId = Pkg4 },
+        new() { TransferId = Transfer4, PackageId = Pkg6 }
     ];
 
     private static List<LabTest> CreateLabTests() =>
@@ -295,6 +343,17 @@ public static class DataSeeder
             ResultDate = new DateTime(2024, 5, 18, 0, 0, 0, DateTimeKind.Utc),
             LabFacilityName = "Cascade Analytical Labs",
             CreatedAt = new DateTime(2024, 5, 18, 0, 0, 0, DateTimeKind.Utc)
+        },
+        new()
+        {
+            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000006"),
+            FacilityId = PortlandFacilityId,
+            PackageId = Pkg6,
+            TestType = "Potency",
+            OverallPassed = true,
+            ResultDate = new DateTime(2024, 6, 19, 0, 0, 0, DateTimeKind.Utc),
+            LabFacilityName = "Cascade Analytical Labs",
+            CreatedAt = new DateTime(2024, 6, 19, 0, 0, 0, DateTimeKind.Utc)
         }
     ];
 }
