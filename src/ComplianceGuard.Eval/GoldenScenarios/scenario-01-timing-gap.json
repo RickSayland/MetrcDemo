@@ -1,0 +1,6 @@
+{
+  "scenarioId": "timing-gap",
+  "description": "Detects an anomalous gap between consecutive custody events",
+  "events": [],
+  "expectedAnomalies": []
+}

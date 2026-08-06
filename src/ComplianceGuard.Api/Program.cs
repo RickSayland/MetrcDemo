@@ -1,0 +1,37 @@
+using ComplianceGuard.Api.Middleware;
+using ComplianceGuard.Application.Anomalies;
+using ComplianceGuard.Application.CustodyEvents;
+using ComplianceGuard.Domain.Abstractions;
+using ComplianceGuard.Infrastructure.Ai;
+using ComplianceGuard.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
+builder.Services.AddScoped<ICustodyRepository, DapperCustodyRepository>();
+builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionAgent>();
+builder.Services.AddScoped<RecordCustodyEventHandler>();
+builder.Services.AddScoped<GetChainOfCustodyHandler>();
+builder.Services.AddScoped<ReviewAnomalyHandler>();
+builder.Services.AddScoped<AnomalyDetectionService>();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseMiddleware<TenantResolutionMiddleware>();
+
+app.Run();
+
+public partial class Program { }

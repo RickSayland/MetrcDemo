@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ComplianceGuard.Api/ComplianceGuard.Api.csproj" />
+    <Project Path="src/ComplianceGuard.Application/ComplianceGuard.Application.csproj" />
+    <Project Path="src/ComplianceGuard.Domain/ComplianceGuard.Domain.csproj" />
+    <Project Path="src/ComplianceGuard.Eval/ComplianceGuard.Eval.csproj" />
+    <Project Path="src/ComplianceGuard.Infrastructure/ComplianceGuard.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ComplianceGuard.ApiTests/ComplianceGuard.ApiTests.csproj" />
+    <Project Path="tests/ComplianceGuard.IntegrationTests/ComplianceGuard.IntegrationTests.csproj" />
+    <Project Path="tests/ComplianceGuard.UnitTests/ComplianceGuard.UnitTests.csproj" />
+  </Folder>
+</Solution>

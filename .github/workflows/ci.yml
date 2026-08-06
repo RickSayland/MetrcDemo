@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: YourStrong!Passw0rd
+        ports:
+          - 1433:1433
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Unit Tests
+        run: dotnet test tests/ComplianceGuard.UnitTests --no-build --verbosity normal
+
+      - name: Integration Tests
+        run: dotnet test tests/ComplianceGuard.IntegrationTests --no-build --verbosity normal
+
+      - name: API Tests
+        run: dotnet test tests/ComplianceGuard.ApiTests --no-build --verbosity normal
+
+      - name: Eval Harness
+        run: dotnet run --project src/ComplianceGuard.Eval --no-build
