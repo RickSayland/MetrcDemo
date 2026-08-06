@@ -152,12 +152,6 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         var labJson = await plugin.DetectLabTestAnomalyAsync(packagesJson);
         results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonOptions) ?? []);
 
-        var timingJson = await plugin.DetectTransferTimingGapAsync(transfersJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(timingJson, JsonOptions) ?? []);
-
-        var distanceJson = await plugin.DetectFacilityDistanceViolationAsync(transfersJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(distanceJson, JsonOptions) ?? []);
-
         return results;
     }
 

@@ -16,7 +16,8 @@ public static class SemanticKernelFactory
         var builder = Kernel.CreateBuilder();
         builder.Services.AddSingleton(loggerFactory);
 
-        var openAiKey = config["OpenAI:ApiKey"];
+        var openAiKey = config["OpenAI:ApiKey"]
+            ?? Environment.GetEnvironmentVariable("MetrcOpenAiKey");
         var modelId = config["OpenAI:ModelId"] ?? "gpt-4o-mini";
 
         if (!string.IsNullOrWhiteSpace(openAiKey))

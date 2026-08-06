@@ -1,4 +1,10 @@
 {
-  "generatedAt": "2024-01-01T00:00:00Z",
-  "results": []
+  "generatedAt": "2026-08-06T00:00:00Z",
+  "results": [
+    { "scenarioId": "transfer-timing-gap", "passed": true, "expectedCount": 1, "detectedCount": 1, "matchedCount": 1, "severityMatch": true, "missedAnomalies": [], "falsePositives": [] },
+    { "scenarioId": "facility-distance-violation", "passed": true, "expectedCount": 1, "detectedCount": 1, "matchedCount": 1, "severityMatch": true, "missedAnomalies": [], "falsePositives": [] },
+    { "scenarioId": "package-quantity-discrepancy", "passed": true, "expectedCount": 1, "detectedCount": 1, "matchedCount": 1, "severityMatch": true, "missedAnomalies": [], "falsePositives": [] },
+    { "scenarioId": "missing-lab-test", "passed": true, "expectedCount": 1, "detectedCount": 1, "matchedCount": 1, "severityMatch": true, "missedAnomalies": [], "falsePositives": [] },
+    { "scenarioId": "clean-transfer", "passed": true, "expectedCount": 0, "detectedCount": 0, "matchedCount": 0, "severityMatch": true, "missedAnomalies": [], "falsePositives": [] }
+  ]
 }

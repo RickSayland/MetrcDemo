@@ -1,7 +1,51 @@
 {
   "scenarioId": "package-quantity-discrepancy",
   "description": "A transfer manifest lists 50 packages but only 47 are received at the destination facility — 3 packages unaccounted for in the supply chain",
-  "transfers": [],
+  "facilities": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "licenseNumber": "OR-CUL-00142",
+      "name": "Emerald Valley Cultivation",
+      "facilityType": "Cultivator",
+      "state": "OR",
+      "city": "Portland",
+      "latitude": 45.5152,
+      "longitude": -122.6784
+    },
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "licenseNumber": "OR-RET-00287",
+      "name": "Green Leaf Dispensary",
+      "facilityType": "Retailer",
+      "state": "OR",
+      "city": "Eugene",
+      "latitude": 44.0521,
+      "longitude": -123.0868
+    }
+  ],
+  "transfers": [
+    {
+      "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+      "facilityId": "11111111-1111-1111-1111-111111111111",
+      "manifestNumber": "OR-MAN-EVAL-003",
+      "shipperFacilityLicenseNumber": "OR-CUL-00142",
+      "shipperFacilityName": "Emerald Valley Cultivation",
+      "recipientFacilityLicenseNumber": "OR-RET-00287",
+      "recipientFacilityName": "Green Leaf Dispensary",
+      "transporterName": "Pacific Northwest Transport LLC",
+      "driverName": "Test Driver",
+      "vehicleLicensePlate": "OR-TEST-003",
+      "packageCount": 50,
+      "actualPackageCount": 47,
+      "estimatedDepartureAt": "2024-06-15T08:00:00Z",
+      "estimatedArrivalAt": "2024-06-15T10:30:00Z",
+      "actualDepartureAt": "2024-06-15T08:10:00Z",
+      "actualArrivalAt": "2024-06-15T10:40:00Z",
+      "status": "Received"
+    }
+  ],
+  "packages": [],
+  "labTests": [],
   "expectedAnomalies": [
     {
       "anomalyType": "PackageQuantityDiscrepancy",
