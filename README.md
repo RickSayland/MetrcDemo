@@ -15,25 +15,25 @@ A multi-tenant supply-chain compliance monitoring API modeled on cannabis track-
            │                                  │
            ▼                                  ▼
 ┌─────────────────────────┐    ┌──────────────────────────────────┐
-│ ComplianceGuard.         │    │ ComplianceGuard.Infrastructure   │
-│ Application              │    │                                  │
-│                          │    │  Persistence/                    │
-│  Transfer handlers       │◄───│    AppDbContext (EF Core)        │
-│  AnomalyDetectionService │    │    DapperTransferRepository      │
-│  ReviewAnomalyHandler    │    │  Ai/                             │
-│                          │    │    SemanticKernelFactory          │
-└──────────┬───────────────┘    │    AnomalyDetectionAgent         │
-           │                    │    Plugins/                       │
-           ▼                    │      CustodyAnomalyPlugin        │
-┌──────────────────────────┐    └──────────────┬───────────────────┘
-│ ComplianceGuard.Domain   │                   │
-│                          │◄──────────────────┘
+│ ComplianceGuard.        │    │ ComplianceGuard.Infrastructure   │
+│ Application             │    │                                  │
+│                         │    │  Persistence/                    │
+│  Transfer handlers      │◄───│    AppDbContext (EF Core)        │
+│  AnomalyDetectionService│    │    DapperTransferRepository      │
+│  ReviewAnomalyHandler   │    │  Ai/                             │
+│                         │    │    SemanticKernelFactory         │
+└──────────┬──────────────┘    │    AnomalyDetectionAgent         │
+           │                   │    Plugins/                      │
+           ▼                   │      CustodyAnomalyPlugin        │
+┌──────────────────────────┐   └──────────────┬───────────────────┘
+│ ComplianceGuard.Domain   │                  │
+│                          │◄─────────────────┘
 │  Entities/               │
 │    Facility, Package,    │
 │    Transfer, LabTest,    │
 │    AnomalyFlag           │
 │  Abstractions/           │
-│    ITenantContext,        │
+│    ITenantContext,       │
 │    ITransferRepository   │
 └──────────────────────────┘
 ```
