@@ -163,6 +163,7 @@ public static class DataSeeder
 
     private static readonly Guid Transfer1 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000001");
     private static readonly Guid Transfer2 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000002");
+    private static readonly Guid Transfer3 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000003");
 
     private static List<Transfer> CreateTransfers() =>
     [
@@ -205,6 +206,27 @@ public static class DataSeeder
             ActualArrivalAt = null,
             Status = "InTransit",
             CreatedAt = new DateTime(2024, 6, 17, 0, 0, 0, DateTimeKind.Utc)
+        },
+        // Suspicious transfer: 2.5h route took 72 hours — possible diversion
+        new()
+        {
+            Id = Transfer3,
+            FacilityId = PortlandFacilityId,
+            ManifestNumber = "OR-MAN-2024-001601",
+            ShipperFacilityLicenseNumber = "OR-CUL-00142",
+            ShipperFacilityName = "Emerald Valley Cultivation",
+            RecipientFacilityLicenseNumber = "OR-RET-00287",
+            RecipientFacilityName = "Green Leaf Dispensary",
+            TransporterName = "Pacific Northwest Transport LLC",
+            DriverName = "Jake Morrison",
+            VehicleLicensePlate = "OR-TCH-9102",
+            PackageCount = 5,
+            EstimatedDepartureAt = new DateTime(2024, 6, 22, 7, 0, 0, DateTimeKind.Utc),
+            EstimatedArrivalAt = new DateTime(2024, 6, 22, 9, 30, 0, DateTimeKind.Utc),
+            ActualDepartureAt = new DateTime(2024, 6, 22, 7, 5, 0, DateTimeKind.Utc),
+            ActualArrivalAt = new DateTime(2024, 6, 25, 7, 5, 0, DateTimeKind.Utc),
+            Status = "Received",
+            CreatedAt = new DateTime(2024, 6, 21, 0, 0, 0, DateTimeKind.Utc)
         }
     ];
 
@@ -212,7 +234,9 @@ public static class DataSeeder
     [
         new() { TransferId = Transfer1, PackageId = Pkg1 },
         new() { TransferId = Transfer1, PackageId = Pkg2 },
-        new() { TransferId = Transfer2, PackageId = Pkg3 }
+        new() { TransferId = Transfer2, PackageId = Pkg3 },
+        new() { TransferId = Transfer3, PackageId = Pkg1 },
+        new() { TransferId = Transfer3, PackageId = Pkg4 }
     ];
 
     private static List<LabTest> CreateLabTests() =>

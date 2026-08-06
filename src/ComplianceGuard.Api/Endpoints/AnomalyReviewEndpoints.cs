@@ -41,6 +41,26 @@ public static class AnomalyReviewEndpoints
             return Results.Ok(ToResponse(anomaly));
         });
 
+        group.MapPost("/scan", async (AnomalyDetectionService detectionService, AppDbContext db) =>
+        {
+            var transfers = await db.Transfers
+                .Include(t => t.Facility)
+                .Include(t => t.TransferPackages).ThenInclude(tp => tp.Package)
+                .ToListAsync();
+
+            var facilities = await db.Facilities.IgnoreQueryFilters().ToListAsync();
+
+            var anomalies = await detectionService.DetectTransferAnomaliesAsync(transfers, facilities);
+
+            if (anomalies.Count > 0)
+            {
+                db.AnomalyFlags.AddRange(anomalies);
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new ScanResponse(anomalies.Count, anomalies.Select(ToResponse).ToList()));
+        });
+
         return routes;
     }
 
@@ -49,6 +69,8 @@ public static class AnomalyReviewEndpoints
         a.AnomalyType, a.Description, a.Severity,
         a.IsResolved, a.Resolution, a.DetectedAt, a.ResolvedAt);
 }
+
+public record ScanResponse(int AnomaliesDetected, List<AnomalyResponse> Anomalies);
 
 public record ResolveAnomalyRequest(string Resolution);
 

@@ -17,6 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<ITransferRepository, DapperTransferRepository>();
+builder.Services.AddSingleton(sp => SemanticKernelFactory.Create(sp));
 builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionAgent>();
 builder.Services.AddScoped<RecordTransferHandler>();
 builder.Services.AddScoped<GetPackageTransferHistoryHandler>();
