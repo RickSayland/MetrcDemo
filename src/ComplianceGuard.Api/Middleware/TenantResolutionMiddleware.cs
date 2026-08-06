@@ -1,4 +1,6 @@
 using ComplianceGuard.Domain.Abstractions;
+using ComplianceGuard.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ComplianceGuard.Api.Middleware;
 
@@ -13,17 +15,18 @@ public class TenantResolutionMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context.RequestServices.GetService<ITenantContext>() is HttpTenantContext tenantCtx)
+        if (context.RequestServices.GetService<ITenantContext>() is HttpTenantContext tenantCtx
+            && context.Request.Headers.TryGetValue("X-License-Number", out var licenseHeader)
+            && !string.IsNullOrWhiteSpace(licenseHeader))
         {
-            if (context.Request.Headers.TryGetValue("X-License-Number", out var licenseHeader)
-                && !string.IsNullOrWhiteSpace(licenseHeader))
+            var db = context.RequestServices.GetRequiredService<AppDbContext>();
+            var facility = await db.Facilities
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(f => f.LicenseNumber == licenseHeader.ToString());
+
+            if (facility is not null)
             {
-                // In production, resolve LicenseNumber → FacilityId via DB lookup.
-                // For now, parse directly if a Guid is passed, or look up by license number.
-                if (Guid.TryParse(licenseHeader, out var facilityId))
-                {
-                    tenantCtx.SetTenantId(facilityId);
-                }
+                tenantCtx.SetTenantId(facility.Id);
             }
         }
 

@@ -1,15 +1,19 @@
 using ComplianceGuard.Domain.Abstractions;
+using ComplianceGuard.Domain.Entities;
 
 namespace ComplianceGuard.Application.Transfers;
 
 public class GetPackageTransferHistoryHandler
 {
     private readonly ITransferRepository _repository;
-    private readonly ITenantContext _tenantContext;
 
     public GetPackageTransferHistoryHandler(ITransferRepository repository, ITenantContext tenantContext)
     {
         _repository = repository;
-        _tenantContext = tenantContext;
+    }
+
+    public async Task<IReadOnlyList<Transfer>> HandleAsync(string packageTag, CancellationToken ct = default)
+    {
+        return await _repository.GetByPackageTagAsync(packageTag, ct);
     }
 }

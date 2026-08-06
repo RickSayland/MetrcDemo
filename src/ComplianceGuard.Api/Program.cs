@@ -1,3 +1,4 @@
+using ComplianceGuard.Api.Endpoints;
 using ComplianceGuard.Api.Middleware;
 using ComplianceGuard.Application.Anomalies;
 using ComplianceGuard.Application.Transfers;
@@ -32,6 +33,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<TenantResolutionMiddleware>();
+
+app.MapFacilityEndpoints();
+app.MapPackageEndpoints();
+app.MapTransferEndpoints();
+app.MapLabTestEndpoints();
+app.MapAnomalyReviewEndpoints();
 
 app.Run();
 

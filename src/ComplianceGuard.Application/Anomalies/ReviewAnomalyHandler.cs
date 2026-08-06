@@ -1,13 +1,14 @@
-using ComplianceGuard.Domain.Abstractions;
+using ComplianceGuard.Domain.Entities;
 
 namespace ComplianceGuard.Application.Anomalies;
 
 public class ReviewAnomalyHandler
 {
-    private readonly ITenantContext _tenantContext;
-
-    public ReviewAnomalyHandler(ITenantContext tenantContext)
+    public AnomalyFlag Resolve(AnomalyFlag anomaly, string resolution)
     {
-        _tenantContext = tenantContext;
+        anomaly.IsResolved = true;
+        anomaly.Resolution = resolution;
+        anomaly.ResolvedAt = DateTime.UtcNow;
+        return anomaly;
     }
 }
