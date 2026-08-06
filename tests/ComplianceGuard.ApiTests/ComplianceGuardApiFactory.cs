@@ -1,3 +1,4 @@
+using ComplianceGuard.Domain.Abstractions;
 using ComplianceGuard.Domain.Entities;
 using ComplianceGuard.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
@@ -17,15 +18,22 @@ public class ComplianceGuardApiFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            var descriptor = services.SingleOrDefault(
+            var dbDescriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            if (descriptor is not null)
-                services.Remove(descriptor);
+            if (dbDescriptor is not null)
+                services.Remove(dbDescriptor);
 
             services.AddDbContext<AppDbContext>((sp, options) =>
             {
                 options.UseInMemoryDatabase("ComplianceGuardTests");
             });
+
+            var dapperDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(ITransferRepository));
+            if (dapperDescriptor is not null)
+                services.Remove(dapperDescriptor);
+
+            services.AddScoped<ITransferRepository, EfTransferRepository>();
 
             using var scope = services.BuildServiceProvider().CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
