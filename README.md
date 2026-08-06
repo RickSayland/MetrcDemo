@@ -23,7 +23,7 @@ A multi-tenant supply-chain compliance monitoring API modeled on cannabis track-
 │  Transfer handlers      │◄───│    AppDbContext (EF Core)            │
 │  AnomalyDetectionService│    │    DapperTransferRepository          │
 │  ReviewAnomalyHandler   │    │  Ai/                                 │
-│                         │    │    SemanticKernelFactory              │
+│                         │    │    SemanticKernelFactory             │
 └──────────┬──────────────┘    │    AnomalyDetectionAgent (SK)        │
            │                   │    Plugins/                          │
            ▼                   │      CustodyAnomalyPlugin            │
@@ -35,7 +35,7 @@ A multi-tenant supply-chain compliance monitoring API modeled on cannabis track-
 │    Transfer, LabTest,    │   └──────────────────────────────────────┘
 │    AnomalyFlag           │
 │  Abstractions/           │
-│    ITenantContext,        │
+│    ITenantContext,       │
 │    ITransferRepository   │
 └──────────────────────────┘
 ```
