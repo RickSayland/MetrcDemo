@@ -1,19 +1,19 @@
 using System.ComponentModel;
 using System.Text.Json;
+using ComplianceGuard.Domain;
 using Microsoft.SemanticKernel;
 
 namespace ComplianceGuard.Infrastructure.Ai.Plugins;
 
 public class CustodyAnomalyPlugin
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     [KernelFunction("detect_transfer_timing_gap")]
     [Description("Detects suspicious timing gaps between transfer departure and arrival. Input is a JSON array of transfer objects.")]
     public Task<string> DetectTransferTimingGapAsync(
         [Description("JSON array of transfers with EstimatedDepartureAt, EstimatedArrivalAt, ActualDepartureAt, ActualArrivalAt")] string transfersJson)
     {
-        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonOptions) ?? [];
+        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
         foreach (var t in transfers)
@@ -33,7 +33,7 @@ public class CustodyAnomalyPlugin
             {
                 anomalies.Add(new AnomalyResult
                 {
-                    AnomalyType = "TransferTimingGap",
+                    AnomalyType = AnomalyTypes.TransferTimingGap,
                     Severity = "High",
                     TransferId = t.TransferId,
                     Description = $"Transfer {t.ManifestNumber} took {actualHours:F1}h but was estimated at {expectedHours:F1}h ({ratio:F0}x longer). " +
@@ -44,7 +44,7 @@ public class CustodyAnomalyPlugin
             {
                 anomalies.Add(new AnomalyResult
                 {
-                    AnomalyType = "TransferTimingGap",
+                    AnomalyType = AnomalyTypes.TransferTimingGap,
                     Severity = "Medium",
                     TransferId = t.TransferId,
                     Description = $"Transfer {t.ManifestNumber} took {actualHours:F1}h vs estimated {expectedHours:F1}h ({ratio:F1}x longer)."
@@ -60,7 +60,7 @@ public class CustodyAnomalyPlugin
     public Task<string> DetectFacilityDistanceViolationAsync(
         [Description("JSON array of transfers with facility coordinates and actual departure/arrival times")] string transfersJson)
     {
-        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonOptions) ?? [];
+        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
         foreach (var t in transfers)
@@ -83,7 +83,7 @@ public class CustodyAnomalyPlugin
             {
                 anomalies.Add(new AnomalyResult
                 {
-                    AnomalyType = "FacilityDistanceViolation",
+                    AnomalyType = AnomalyTypes.FacilityDistanceViolation,
                     Severity = "Critical",
                     TransferId = t.TransferId,
                     Description = $"Transfer {t.ManifestNumber} covered {distanceMiles:F0} miles in {transitHours:F1}h " +
@@ -100,7 +100,7 @@ public class CustodyAnomalyPlugin
     public Task<string> DetectPackageQuantityDiscrepancyAsync(
         [Description("JSON array of transfers with PackageCount (manifested) and ActualPackageCount (received)")] string transfersJson)
     {
-        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonOptions) ?? [];
+        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
         foreach (var t in transfers)
@@ -118,7 +118,7 @@ public class CustodyAnomalyPlugin
 
                 anomalies.Add(new AnomalyResult
                 {
-                    AnomalyType = "PackageQuantityDiscrepancy",
+                    AnomalyType = AnomalyTypes.PackageQuantityDiscrepancy,
                     Severity = severity,
                     TransferId = t.TransferId,
                     Description = $"Transfer {t.ManifestNumber} manifested {t.PackageCount} packages but only {t.ActualPackageCount.Value} received. " +
@@ -135,7 +135,7 @@ public class CustodyAnomalyPlugin
     public Task<string> DetectLabTestAnomalyAsync(
         [Description("JSON array of package objects with LabTestStatus, lab test results, and transfer associations")] string packagesJson)
     {
-        var packages = JsonSerializer.Deserialize<List<PackageLabDto>>(packagesJson, JsonOptions) ?? [];
+        var packages = JsonSerializer.Deserialize<List<PackageLabDto>>(packagesJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
         foreach (var pkg in packages)
@@ -153,7 +153,7 @@ public class CustodyAnomalyPlugin
 
                 anomalies.Add(new AnomalyResult
                 {
-                    AnomalyType = "MissingLabTest",
+                    AnomalyType = AnomalyTypes.MissingLabTest,
                     Severity = "Critical",
                     PackageId = pkg.PackageId,
                     Description = $"Package {pkg.Tag} was transferred to a dispensary with {reason}. " +
@@ -163,6 +163,22 @@ public class CustodyAnomalyPlugin
         }
 
         return Task.FromResult(JsonSerializer.Serialize(anomalies));
+    }
+
+    public async Task<List<AnomalyResult>> RunAllTransferChecksAsync(string transfersJson)
+    {
+        var results = new List<AnomalyResult>();
+
+        var timingJson = await DetectTransferTimingGapAsync(transfersJson);
+        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(timingJson, JsonDefaults.CaseInsensitive) ?? []);
+
+        var distanceJson = await DetectFacilityDistanceViolationAsync(transfersJson);
+        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(distanceJson, JsonDefaults.CaseInsensitive) ?? []);
+
+        var quantityJson = await DetectPackageQuantityDiscrepancyAsync(transfersJson);
+        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(quantityJson, JsonDefaults.CaseInsensitive) ?? []);
+
+        return results;
     }
 
     private static double HaversineDistance(double lat1, double lon1, double lat2, double lon2)

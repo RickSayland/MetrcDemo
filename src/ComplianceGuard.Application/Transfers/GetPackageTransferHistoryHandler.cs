@@ -7,7 +7,7 @@ public class GetPackageTransferHistoryHandler
 {
     private readonly ITransferRepository _repository;
 
-    public GetPackageTransferHistoryHandler(ITransferRepository repository, ITenantContext tenantContext)
+    public GetPackageTransferHistoryHandler(ITransferRepository repository)
     {
         _repository = repository;
     }

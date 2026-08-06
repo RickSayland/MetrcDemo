@@ -13,7 +13,6 @@ public static class FacilityEndpoints
         group.MapGet("/", async (AppDbContext db) =>
         {
             var facilities = await db.Facilities
-                .IgnoreQueryFilters()
                 .OrderBy(f => f.State).ThenBy(f => f.Name)
                 .ToListAsync();
             return Results.Ok(facilities.Select(ToResponse));
@@ -22,7 +21,6 @@ public static class FacilityEndpoints
         group.MapGet("/{id:guid}", async (Guid id, AppDbContext db) =>
         {
             var facility = await db.Facilities
-                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(f => f.Id == id);
             return facility is null ? Results.NotFound() : Results.Ok(ToResponse(facility));
         });

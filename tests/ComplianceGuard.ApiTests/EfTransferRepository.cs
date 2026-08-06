@@ -8,12 +8,10 @@ namespace ComplianceGuard.ApiTests;
 internal class EfTransferRepository : ITransferRepository
 {
     private readonly AppDbContext _db;
-    private readonly ITenantContext _tenantContext;
 
-    public EfTransferRepository(AppDbContext db, ITenantContext tenantContext)
+    public EfTransferRepository(AppDbContext db)
     {
         _db = db;
-        _tenantContext = tenantContext;
     }
 
     public async Task<Transfer?> GetByIdAsync(Guid id, CancellationToken ct = default)

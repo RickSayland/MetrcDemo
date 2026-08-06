@@ -1,13 +1,13 @@
 using System.Text.Json;
 using ComplianceGuard.Application.Anomalies;
 using ComplianceGuard.Domain.Entities;
+using ComplianceGuard.Infrastructure.Ai;
 
 namespace ComplianceGuard.Eval;
 
 public class EvalRunner
 {
     private readonly IAnomalyDetectionService _detectionService;
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public EvalRunner(IAnomalyDetectionService detectionService)
     {
@@ -25,7 +25,7 @@ public class EvalRunner
         foreach (var file in scenarioFiles)
         {
             var json = await File.ReadAllTextAsync(file);
-            var scenario = JsonSerializer.Deserialize<GoldenScenario>(json, JsonOptions)!;
+            var scenario = JsonSerializer.Deserialize<GoldenScenario>(json, JsonDefaults.CaseInsensitive)!;
             var result = await RunScenarioAsync(scenario);
             results.Add(result);
         }
@@ -116,9 +116,8 @@ public class EvalRunner
             foreach (var pkg in packages)
             {
                 var pkgLabTests = labTests.Where(lt => lt.PackageId == pkg.Id).ToList();
-                var pkgTransfers = transfers;
                 var pkgAnomalies = await _detectionService.AnalyzePackageHistoryAsync(
-                    pkg, pkgTransfers, pkgLabTests);
+                    pkg, transfers, pkgLabTests);
                 detectedAnomalies.AddRange(pkgAnomalies);
             }
         }
@@ -139,7 +138,6 @@ public class EvalRunner
         var expected = scenario.ExpectedAnomalies;
         var matched = new List<ExpectedAnomaly>();
         var missed = new List<ExpectedAnomaly>();
-        var falsePositives = new List<DetectedAnomaly>();
 
         var remaining = detected.Select(d => new DetectedAnomaly
         {
@@ -162,7 +160,7 @@ public class EvalRunner
             }
         }
 
-        falsePositives = remaining;
+        var falsePositives = remaining;
 
         var passed = missed.Count == 0 && falsePositives.Count == 0;
 

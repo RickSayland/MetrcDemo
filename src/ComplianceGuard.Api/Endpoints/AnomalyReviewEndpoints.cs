@@ -1,5 +1,6 @@
 using ComplianceGuard.Application.Anomalies;
 using ComplianceGuard.Domain.Entities;
+using ComplianceGuard.Infrastructure.Ai;
 using ComplianceGuard.Infrastructure.Ai.Plugins;
 using ComplianceGuard.Infrastructure.Ai.Workflows;
 using ComplianceGuard.Infrastructure.Persistence;
@@ -44,16 +45,16 @@ public static class AnomalyReviewEndpoints
             return Results.Ok(ToResponse(anomaly));
         });
 
-        group.MapPost("/scan", async (AnomalyDetectionService detectionService, AppDbContext db) =>
+        group.MapPost("/scan", async (IAnomalyDetectionService detectionService, AppDbContext db) =>
         {
             var transfers = await db.Transfers
                 .Include(t => t.Facility)
                 .Include(t => t.TransferPackages).ThenInclude(tp => tp.Package)
                 .ToListAsync();
 
-            var facilities = await db.Facilities.IgnoreQueryFilters().ToListAsync();
+            var facilities = await db.Facilities.ToListAsync();
 
-            var anomalies = await detectionService.DetectTransferAnomaliesAsync(transfers, facilities);
+            var anomalies = await detectionService.AnalyzeTransfersAsync(transfers, facilities);
 
             if (anomalies.Count > 0)
             {
@@ -71,31 +72,13 @@ public static class AnomalyReviewEndpoints
                 .Include(t => t.TransferPackages).ThenInclude(tp => tp.Package)
                 .ToListAsync();
 
-            var facilities = await db.Facilities.IgnoreQueryFilters().ToListAsync();
+            var facilities = await db.Facilities.ToListAsync();
             var facilityLookup = facilities.ToDictionary(f => f.LicenseNumber);
 
             var facilityId = transfers.FirstOrDefault()?.FacilityId ?? Guid.Empty;
-            var transferDtos = transfers.Select(t =>
-            {
-                facilityLookup.TryGetValue(t.RecipientFacilityLicenseNumber, out var recipient);
-                return new TransferDto
-                {
-                    TransferId = t.Id,
-                    FacilityId = t.FacilityId,
-                    ManifestNumber = t.ManifestNumber,
-                    PackageCount = t.PackageCount,
-                    ActualPackageCount = t.TransferPackages?.Count,
-                    EstimatedDepartureAt = t.EstimatedDepartureAt,
-                    EstimatedArrivalAt = t.EstimatedArrivalAt,
-                    ActualDepartureAt = t.ActualDepartureAt,
-                    ActualArrivalAt = t.ActualArrivalAt,
-                    Status = t.Status,
-                    ShipperLatitude = t.Facility?.Latitude ?? 0,
-                    ShipperLongitude = t.Facility?.Longitude ?? 0,
-                    RecipientLatitude = recipient?.Latitude ?? 0,
-                    RecipientLongitude = recipient?.Longitude ?? 0
-                };
-            }).ToList();
+            var transferDtos = transfers
+                .Select(t => AnomalyDetectionAgent.MapToDto(t, facilityLookup))
+                .ToList();
 
             var scanRequest = new ComplianceScanRequest(transferDtos, facilityId);
 
@@ -111,21 +94,12 @@ public static class AnomalyReviewEndpoints
             if (report is null)
                 return Results.Problem("Workflow produced no output");
 
-            if (report.Anomalies.Count > 0)
-            {
-                var flags = report.Anomalies.Select(a => new AnomalyFlag
-                {
-                    Id = Guid.NewGuid(),
-                    FacilityId = facilityId,
-                    TransferId = a.TransferId,
-                    PackageId = a.PackageId,
-                    AnomalyType = a.AnomalyType,
-                    Description = a.Description,
-                    Severity = a.Severity,
-                    IsResolved = false,
-                    DetectedAt = DateTime.UtcNow
-                }).ToList();
+            var flags = report.Anomalies
+                .Select(a => AnomalyDetectionAgent.ToAnomalyFlag(a, facilityId))
+                .ToList();
 
+            if (flags.Count > 0)
+            {
                 db.AnomalyFlags.AddRange(flags);
                 await db.SaveChangesAsync();
             }
@@ -133,12 +107,9 @@ public static class AnomalyReviewEndpoints
             return Results.Ok(new WorkflowScanResponse(
                 report.Status,
                 report.Summary,
-                report.Anomalies.Count,
+                flags.Count,
                 report.RiskAssessment,
-                report.Anomalies.Select(a => new AnomalyResponse(
-                    Guid.NewGuid(), facilityId, a.TransferId, a.PackageId,
-                    a.AnomalyType, a.Description, a.Severity,
-                    false, null, DateTime.UtcNow, null)).ToList()));
+                flags.Select(ToResponse).ToList()));
         });
 
         return routes;

@@ -1,7 +1,6 @@
 using System.Text.Json;
 using ComplianceGuard.Eval;
 using ComplianceGuard.Infrastructure.Ai;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -78,8 +77,7 @@ static BaselineComparison CompareToBaseline(EvalReport current, string baselineP
     }
 
     var baselineJson = File.ReadAllText(baselinePath);
-    var baseline = JsonSerializer.Deserialize<EvalReport>(baselineJson,
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var baseline = JsonSerializer.Deserialize<EvalReport>(baselineJson, JsonDefaults.CaseInsensitive);
 
     if (baseline is null || baseline.Results.Count == 0)
     {

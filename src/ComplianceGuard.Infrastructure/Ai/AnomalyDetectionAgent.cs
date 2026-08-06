@@ -14,7 +14,6 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
     private readonly Kernel _kernel;
     private readonly ILogger<AnomalyDetectionAgent> _logger;
     private readonly bool _hasLlm;
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private const string SystemPrompt = """
         You are a cannabis supply chain compliance analyst. Your job is to analyze
@@ -61,7 +60,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
             allResults = await RunDirectAsync(transfersJson, ct);
         }
 
-        return allResults.Select(r => MapToAnomalyFlag(r, facilityId)).ToList();
+        return allResults.Select(r => ToAnomalyFlag(r, facilityId)).ToList();
     }
 
     public async Task<IReadOnlyList<AnomalyFlag>> AnalyzePackageHistoryAsync(
@@ -97,7 +96,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
             allResults = await RunDirectPackageAsync(packagesJson, transfersJson, ct);
         }
 
-        return allResults.Select(r => MapToAnomalyFlag(r, package.FacilityId)).ToList();
+        return allResults.Select(r => ToAnomalyFlag(r, package.FacilityId)).ToList();
     }
 
     private async Task<List<AnomalyResult>> RunWithLlmAsync(string userMessage, CancellationToken ct)
@@ -125,20 +124,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
     private async Task<List<AnomalyResult>> RunDirectAsync(string transfersJson, CancellationToken ct)
     {
         _logger.LogInformation("Running anomaly detection in direct mode (no LLM configured)");
-
-        var plugin = new CustodyAnomalyPlugin();
-        var results = new List<AnomalyResult>();
-
-        var timingJson = await plugin.DetectTransferTimingGapAsync(transfersJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(timingJson, JsonOptions) ?? []);
-
-        var distanceJson = await plugin.DetectFacilityDistanceViolationAsync(transfersJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(distanceJson, JsonOptions) ?? []);
-
-        var quantityJson = await plugin.DetectPackageQuantityDiscrepancyAsync(transfersJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(quantityJson, JsonOptions) ?? []);
-
-        return results;
+        return await new CustodyAnomalyPlugin().RunAllTransferChecksAsync(transfersJson);
     }
 
     private async Task<List<AnomalyResult>> RunDirectPackageAsync(
@@ -150,7 +136,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         var results = new List<AnomalyResult>();
 
         var labJson = await plugin.DetectLabTestAnomalyAsync(packagesJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonOptions) ?? []);
+        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonDefaults.CaseInsensitive) ?? []);
 
         return results;
     }
@@ -168,7 +154,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
                     var json = functionResult.Result?.ToString();
                     if (string.IsNullOrWhiteSpace(json)) continue;
 
-                    var parsed = JsonSerializer.Deserialize<List<AnomalyResult>>(json, JsonOptions);
+                    var parsed = JsonSerializer.Deserialize<List<AnomalyResult>>(json, JsonDefaults.CaseInsensitive);
                     if (parsed is not null)
                         results.AddRange(parsed);
                 }
@@ -178,7 +164,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         return results;
     }
 
-    private static TransferDto MapToDto(Transfer t, Dictionary<string, Facility> facilityLookup)
+    public static TransferDto MapToDto(Transfer t, Dictionary<string, Facility> facilityLookup)
     {
         facilityLookup.TryGetValue(t.RecipientFacilityLicenseNumber, out var recipient);
 
@@ -201,7 +187,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         };
     }
 
-    private static AnomalyFlag MapToAnomalyFlag(AnomalyResult result, Guid facilityId) => new()
+    public static AnomalyFlag ToAnomalyFlag(AnomalyResult result, Guid facilityId) => new()
     {
         Id = Guid.NewGuid(),
         FacilityId = facilityId,

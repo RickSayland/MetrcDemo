@@ -21,7 +21,6 @@ public class TenantResolutionMiddleware
         {
             var db = context.RequestServices.GetRequiredService<AppDbContext>();
             var facility = await db.Facilities
-                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(f => f.LicenseNumber == licenseHeader.ToString());
 
             if (facility is not null)

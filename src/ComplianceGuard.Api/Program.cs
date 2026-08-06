@@ -24,7 +24,6 @@ builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionAgent>();
 builder.Services.AddScoped<RecordTransferHandler>();
 builder.Services.AddScoped<GetPackageTransferHistoryHandler>();
 builder.Services.AddScoped<ReviewAnomalyHandler>();
-builder.Services.AddScoped<AnomalyDetectionService>();
 
 var app = builder.Build();
 

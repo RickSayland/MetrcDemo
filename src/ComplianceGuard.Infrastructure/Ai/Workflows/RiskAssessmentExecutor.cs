@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ComplianceGuard.Domain;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 
@@ -82,13 +83,13 @@ internal sealed partial class RiskAssessmentExecutor : Executor
         var actions = new List<string>();
         if (critical > 0)
             actions.Add("Immediate facility audit recommended");
-        if (result.Anomalies.Any(a => a.AnomalyType == "FacilityDistanceViolation"))
+        if (result.Anomalies.Any(a => a.AnomalyType == AnomalyTypes.FacilityDistanceViolation))
             actions.Add("Refer manifest data to state regulatory agency");
-        if (result.Anomalies.Any(a => a.AnomalyType == "PackageQuantityDiscrepancy"))
+        if (result.Anomalies.Any(a => a.AnomalyType == AnomalyTypes.PackageQuantityDiscrepancy))
             actions.Add("Hold affected shipments pending inventory reconciliation");
-        if (result.Anomalies.Any(a => a.AnomalyType == "MissingLabTest"))
+        if (result.Anomalies.Any(a => a.AnomalyType == AnomalyTypes.MissingLabTest))
             actions.Add("Quarantine untested product — do not release to dispensary");
-        if (result.Anomalies.Any(a => a.AnomalyType == "TransferTimingGap"))
+        if (result.Anomalies.Any(a => a.AnomalyType == AnomalyTypes.TransferTimingGap))
             actions.Add("Request GPS logs and driver statements for affected transfers");
 
         return $"Risk Level: {(critical > 0 ? "Critical" : high > 0 ? "High" : "Medium")}. " +
