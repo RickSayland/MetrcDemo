@@ -1,6 +1,6 @@
 using ComplianceGuard.Api.Middleware;
 using ComplianceGuard.Application.Anomalies;
-using ComplianceGuard.Application.CustodyEvents;
+using ComplianceGuard.Application.Transfers;
 using ComplianceGuard.Domain.Abstractions;
 using ComplianceGuard.Infrastructure.Ai;
 using ComplianceGuard.Infrastructure.Persistence;
@@ -15,10 +15,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
-builder.Services.AddScoped<ICustodyRepository, DapperCustodyRepository>();
+builder.Services.AddScoped<ITransferRepository, DapperTransferRepository>();
 builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionAgent>();
-builder.Services.AddScoped<RecordCustodyEventHandler>();
-builder.Services.AddScoped<GetChainOfCustodyHandler>();
+builder.Services.AddScoped<RecordTransferHandler>();
+builder.Services.AddScoped<GetPackageTransferHistoryHandler>();
 builder.Services.AddScoped<ReviewAnomalyHandler>();
 builder.Services.AddScoped<AnomalyDetectionService>();
 

@@ -1,0 +1,11 @@
+{
+  "scenarioId": "facility-distance-violation",
+  "description": "A package is received at a facility 400 miles away only 30 minutes after departure — physically impossible transit time suggests data entry fraud or manifest tampering",
+  "transfers": [],
+  "expectedAnomalies": [
+    {
+      "anomalyType": "FacilityDistanceViolation",
+      "severity": "Critical"
+    }
+  ]
+}

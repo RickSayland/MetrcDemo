@@ -14,17 +14,19 @@ public class AppDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    public DbSet<Tenant> Tenants => Set<Tenant>();
-    public DbSet<Product> Products => Set<Product>();
-    public DbSet<CustodyEvent> CustodyEvents => Set<CustodyEvent>();
+    public DbSet<Facility> Facilities => Set<Facility>();
+    public DbSet<Package> Packages => Set<Package>();
+    public DbSet<Transfer> Transfers => Set<Transfer>();
+    public DbSet<LabTest> LabTests => Set<LabTest>();
     public DbSet<AnomalyFlag> AnomalyFlags => Set<AnomalyFlag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Product>().HasQueryFilter(p => p.TenantId == _tenantContext.TenantId);
-        modelBuilder.Entity<CustodyEvent>().HasQueryFilter(e => e.TenantId == _tenantContext.TenantId);
-        modelBuilder.Entity<AnomalyFlag>().HasQueryFilter(a => a.TenantId == _tenantContext.TenantId);
+        modelBuilder.Entity<Package>().HasQueryFilter(p => p.FacilityId == _tenantContext.TenantId);
+        modelBuilder.Entity<Transfer>().HasQueryFilter(t => t.FacilityId == _tenantContext.TenantId);
+        modelBuilder.Entity<LabTest>().HasQueryFilter(l => l.FacilityId == _tenantContext.TenantId);
+        modelBuilder.Entity<AnomalyFlag>().HasQueryFilter(a => a.FacilityId == _tenantContext.TenantId);
     }
 }

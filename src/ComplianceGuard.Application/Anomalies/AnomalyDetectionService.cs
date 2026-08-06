@@ -11,8 +11,13 @@ public class AnomalyDetectionService
         _aiService = aiService;
     }
 
-    public Task<IReadOnlyList<AnomalyFlag>> DetectAnomaliesAsync(IReadOnlyList<CustodyEvent> events, CancellationToken ct = default)
+    public Task<IReadOnlyList<AnomalyFlag>> DetectTransferAnomaliesAsync(IReadOnlyList<Transfer> transfers, CancellationToken ct = default)
     {
-        return _aiService.AnalyzeChainAsync(events, ct);
+        return _aiService.AnalyzeTransfersAsync(transfers, ct);
+    }
+
+    public Task<IReadOnlyList<AnomalyFlag>> DetectPackageAnomaliesAsync(Package package, IReadOnlyList<Transfer> transfers, IReadOnlyList<LabTest> labTests, CancellationToken ct = default)
+    {
+        return _aiService.AnalyzePackageHistoryAsync(package, transfers, labTests, ct);
     }
 }

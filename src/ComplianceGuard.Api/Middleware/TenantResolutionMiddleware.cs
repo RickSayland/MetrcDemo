@@ -15,10 +15,15 @@ public class TenantResolutionMiddleware
     {
         if (context.RequestServices.GetService<ITenantContext>() is HttpTenantContext tenantCtx)
         {
-            if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantHeader)
-                && Guid.TryParse(tenantHeader, out var tenantId))
+            if (context.Request.Headers.TryGetValue("X-License-Number", out var licenseHeader)
+                && !string.IsNullOrWhiteSpace(licenseHeader))
             {
-                tenantCtx.SetTenantId(tenantId);
+                // In production, resolve LicenseNumber → FacilityId via DB lookup.
+                // For now, parse directly if a Guid is passed, or look up by license number.
+                if (Guid.TryParse(licenseHeader, out var facilityId))
+                {
+                    tenantCtx.SetTenantId(facilityId);
+                }
             }
         }
 

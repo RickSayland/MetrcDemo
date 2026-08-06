@@ -1,0 +1,11 @@
+{
+  "scenarioId": "transfer-timing-gap",
+  "description": "A package transfer departs a cultivation facility but arrives at the dispensary 72 hours later for what should be a 2-hour drive — flags a suspicious delay in the supply chain",
+  "transfers": [],
+  "expectedAnomalies": [
+    {
+      "anomalyType": "TransferTimingGap",
+      "severity": "High"
+    }
+  ]
+}

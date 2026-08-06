@@ -1,6 +1,0 @@
-{
-  "scenarioId": "location-jump",
-  "description": "Detects an impossible geographic jump between consecutive custody events",
-  "events": [],
-  "expectedAnomalies": []
-}

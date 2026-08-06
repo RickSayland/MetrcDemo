@@ -1,0 +1,11 @@
+{
+  "scenarioId": "package-quantity-discrepancy",
+  "description": "A transfer manifest lists 50 packages but only 47 are received at the destination facility — 3 packages unaccounted for in the supply chain",
+  "transfers": [],
+  "expectedAnomalies": [
+    {
+      "anomalyType": "PackageQuantityDiscrepancy",
+      "severity": "High"
+    }
+  ]
+}

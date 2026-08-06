@@ -1,0 +1,13 @@
+{
+  "scenarioId": "missing-lab-test",
+  "description": "A package is transferred to a dispensary for retail sale but has no passing lab test on record — regulatory violation requiring immediate hold",
+  "packages": [],
+  "labTests": [],
+  "transfers": [],
+  "expectedAnomalies": [
+    {
+      "anomalyType": "MissingLabTest",
+      "severity": "Critical"
+    }
+  ]
+}
