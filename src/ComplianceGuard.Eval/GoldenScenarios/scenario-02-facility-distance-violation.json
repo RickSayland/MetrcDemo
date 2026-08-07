@@ -3,7 +3,7 @@
   "description": "A package is received at a facility 400 miles away only 30 minutes after departure — physically impossible transit time suggests data entry fraud or manifest tampering",
   "facilities": [
     {
-      "id": "11111111-1111-1111-1111-111111111111",
+      "id": "11111111-1111-4111-8111-111111111111",
       "licenseNumber": "OR-CUL-00142",
       "name": "Emerald Valley Cultivation",
       "facilityType": "Cultivator",
@@ -13,7 +13,7 @@
       "longitude": -122.6784
     },
     {
-      "id": "33333333-3333-3333-3333-333333333333",
+      "id": "33333333-3333-4333-8333-333333333333",
       "licenseNumber": "CA-RET-00501",
       "name": "Bay Area Dispensary",
       "facilityType": "Retailer",
@@ -25,8 +25,8 @@
   ],
   "transfers": [
     {
-      "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-      "facilityId": "11111111-1111-1111-1111-111111111111",
+      "id": "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+      "facilityId": "11111111-1111-4111-8111-111111111111",
       "manifestNumber": "OR-MAN-EVAL-002",
       "shipperFacilityLicenseNumber": "OR-CUL-00142",
       "shipperFacilityName": "Emerald Valley Cultivation",

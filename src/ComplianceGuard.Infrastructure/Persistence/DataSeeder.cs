@@ -7,10 +7,10 @@ namespace ComplianceGuard.Infrastructure.Persistence;
 public static class DataSeeder
 {
     // Deterministic GUIDs so seed data is idempotent
-    public static readonly Guid PortlandFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000001");
-    public static readonly Guid EugeneFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000002");
-    public static readonly Guid BendLabFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000003");
-    public static readonly Guid SanFranciscoFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000004");
+    public static readonly Guid PortlandFacilityId = Guid.Parse("a1b2c3d4-0001-4001-8001-000000000001");
+    public static readonly Guid EugeneFacilityId = Guid.Parse("a1b2c3d4-0001-4001-8001-000000000002");
+    public static readonly Guid BendLabFacilityId = Guid.Parse("a1b2c3d4-0001-4001-8001-000000000003");
+    public static readonly Guid SanFranciscoFacilityId = Guid.Parse("a1b2c3d4-0001-4001-8001-000000000004");
 
     public static async Task SeedAsync(IServiceProvider services)
     {
@@ -90,11 +90,11 @@ public static class DataSeeder
         }
     ];
 
-    private static readonly Guid Pkg1 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000001");
-    private static readonly Guid Pkg2 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000002");
-    private static readonly Guid Pkg3 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000003");
-    private static readonly Guid Pkg4 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000004");
-    private static readonly Guid Pkg5 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000005");
+    private static readonly Guid Pkg1 = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000001");
+    private static readonly Guid Pkg2 = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000002");
+    private static readonly Guid Pkg3 = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000003");
+    private static readonly Guid Pkg4 = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000004");
+    private static readonly Guid Pkg5 = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000005");
 
     private static List<Package> CreatePackages() =>
     [
@@ -184,12 +184,12 @@ public static class DataSeeder
         }
     ];
 
-    private static readonly Guid Pkg6 = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000006");
+    private static readonly Guid Pkg6 = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000006");
 
-    private static readonly Guid Transfer1 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000001");
-    private static readonly Guid Transfer2 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000002");
-    private static readonly Guid Transfer3 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000003");
-    private static readonly Guid Transfer4 = Guid.Parse("c3c3c3d4-0003-0003-0003-000000000004");
+    private static readonly Guid Transfer1 = Guid.Parse("c3c3c3d4-0003-4003-8003-000000000001");
+    private static readonly Guid Transfer2 = Guid.Parse("c3c3c3d4-0003-4003-8003-000000000002");
+    private static readonly Guid Transfer3 = Guid.Parse("c3c3c3d4-0003-4003-8003-000000000003");
+    private static readonly Guid Transfer4 = Guid.Parse("c3c3c3d4-0003-4003-8003-000000000004");
 
     private static List<Transfer> CreateTransfers() =>
     [
@@ -291,7 +291,7 @@ public static class DataSeeder
     [
         new()
         {
-            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000001"),
+            Id = Guid.Parse("d4d4d4d4-0004-4004-8004-000000000001"),
             FacilityId = PortlandFacilityId,
             PackageId = Pkg1,
             TestType = "Potency",
@@ -302,7 +302,7 @@ public static class DataSeeder
         },
         new()
         {
-            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000002"),
+            Id = Guid.Parse("d4d4d4d4-0004-4004-8004-000000000002"),
             FacilityId = PortlandFacilityId,
             PackageId = Pkg1,
             TestType = "Pesticides",
@@ -313,7 +313,7 @@ public static class DataSeeder
         },
         new()
         {
-            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000003"),
+            Id = Guid.Parse("d4d4d4d4-0004-4004-8004-000000000003"),
             FacilityId = PortlandFacilityId,
             PackageId = Pkg2,
             TestType = "Potency",
@@ -324,7 +324,7 @@ public static class DataSeeder
         },
         new()
         {
-            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000004"),
+            Id = Guid.Parse("d4d4d4d4-0004-4004-8004-000000000004"),
             FacilityId = PortlandFacilityId,
             PackageId = Pkg3,
             TestType = "Residual Solvents",
@@ -335,7 +335,7 @@ public static class DataSeeder
         },
         new()
         {
-            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000005"),
+            Id = Guid.Parse("d4d4d4d4-0004-4004-8004-000000000005"),
             FacilityId = EugeneFacilityId,
             PackageId = Pkg5,
             TestType = "Potency",
@@ -346,7 +346,7 @@ public static class DataSeeder
         },
         new()
         {
-            Id = Guid.Parse("d4d4d4d4-0004-0004-0004-000000000006"),
+            Id = Guid.Parse("d4d4d4d4-0004-4004-8004-000000000006"),
             FacilityId = PortlandFacilityId,
             PackageId = Pkg6,
             TestType = "Potency",

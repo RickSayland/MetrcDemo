@@ -1,6 +1,6 @@
 # ComplianceGuard
 
-A multi-tenant supply-chain compliance monitoring API modeled on cannabis track-and-trace regulatory systems. Built with .NET 8, it tracks packages from cultivation through retail sale across licensed facilities, uses AI-powered anomaly detection via both Microsoft Semantic Kernel and Microsoft Agent Framework Workflows, and includes an evaluation harness to prevent AI regressions in CI.
+A multi-tenant supply-chain compliance monitoring API modeled on cannabis track-and-trace regulatory systems. Built with .NET 10, it tracks packages from cultivation through retail sale across licensed facilities, uses AI-powered anomaly detection via both Microsoft Semantic Kernel and Microsoft Agent Framework Workflows, and includes an evaluation harness to prevent AI regressions in CI.
 
 > **Why this project?** Cannabis regulatory platforms enforce strict chain-of-custody rules across dozens of independently regulated state markets. Each licensed facility is a tenant with its own compliance obligations — packages must be tagged (RFID), tested (lab), manifested (transfers), and tracked at every handoff. This demo models that problem: multi-tenant facility isolation, package and transfer tracking, AI-powered anomaly detection on manifests, and a test-driven development workflow that treats the AI agent as a first-class component with its own regression suite.
 
@@ -159,7 +159,7 @@ dotnet run --project src/ComplianceGuard.Eval
 
 ### Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - SQL Server (LocalDB for development, or Docker for integration tests)
 - Docker Desktop (for Testcontainers-based integration tests)
 
@@ -224,7 +224,7 @@ API tests swap `DapperTransferRepository` with an EF Core-backed stub to avoid S
 
 | Category | Technology |
 |---|---|
-| **Runtime** | .NET 8, C# 12 |
+| **Runtime** | .NET 10, C# 14 |
 | **API** | ASP.NET Core Minimal APIs |
 | **ORM** | EF Core 8 (writes, multi-tenancy filters) + Dapper (optimized reads) |
 | **AI — Agent** | Microsoft Semantic Kernel 1.21 (plugins, LLM tool calling) |

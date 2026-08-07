@@ -18,6 +18,7 @@ public static class DemoEndpoints
             await db.Packages.IgnoreQueryFilters().ExecuteDeleteAsync();
             await db.Facilities.ExecuteDeleteAsync();
 
+            db.ChangeTracker.Clear();
             await DataSeeder.SeedAsync(db);
 
             return Results.Ok(new { message = "Database reset with demo data." });

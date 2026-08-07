@@ -3,25 +3,33 @@ using ComplianceGuard.Domain.Entities;
 using ComplianceGuard.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ComplianceGuard.ApiTests;
 
 public class ComplianceGuardApiFactory : WebApplicationFactory<Program>
 {
-    public static readonly Guid PortlandFacilityId = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000001");
+    public static readonly Guid PortlandFacilityId = Guid.Parse("a1b2c3d4-0001-4001-8001-000000000001");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
 
-        builder.ConfigureServices(services =>
+        builder.ConfigureTestServices(services =>
         {
-            var dbDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            if (dbDescriptor is not null)
-                services.Remove(dbDescriptor);
+            // EF Core 10 enforces single-provider — purge SqlServer services before adding InMemory
+            var efDescriptors = services
+                .Where(d => d.ServiceType.FullName?.Contains("EntityFrameworkCore") == true ||
+                            d.ImplementationType?.FullName?.Contains("EntityFrameworkCore") == true)
+                .ToList();
+            foreach (var d in efDescriptors)
+                services.Remove(d);
+
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.RemoveAll<AppDbContext>();
 
             services.AddDbContext<AppDbContext>((sp, options) =>
             {
@@ -63,7 +71,7 @@ public class ComplianceGuardApiFactory : WebApplicationFactory<Program>
             },
             new Facility
             {
-                Id = Guid.Parse("a1b2c3d4-0001-0001-0001-000000000002"),
+                Id = Guid.Parse("a1b2c3d4-0001-4001-8001-000000000002"),
                 LicenseNumber = "OR-RET-00287",
                 Name = "Test Dispensary",
                 FacilityType = "Retailer",
@@ -77,7 +85,7 @@ public class ComplianceGuardApiFactory : WebApplicationFactory<Program>
 
         db.Packages.Add(new Package
         {
-            Id = Guid.Parse("b2b2c3d4-0002-0002-0002-000000000001"),
+            Id = Guid.Parse("b2b2c3d4-0002-4002-8002-000000000001"),
             FacilityId = PortlandFacilityId,
             Tag = "1A4010300003B01000001",
             ItemName = "Blue Dream - Dried Flower",

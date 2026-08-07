@@ -3,7 +3,7 @@
   "description": "A normal compliant transfer — arrives on time, all packages accounted for, all lab tests passed. No anomalies should be flagged.",
   "facilities": [
     {
-      "id": "11111111-1111-1111-1111-111111111111",
+      "id": "11111111-1111-4111-8111-111111111111",
       "licenseNumber": "OR-CUL-00142",
       "name": "Emerald Valley Cultivation",
       "facilityType": "Cultivator",
@@ -13,7 +13,7 @@
       "longitude": -122.6784
     },
     {
-      "id": "22222222-2222-2222-2222-222222222222",
+      "id": "22222222-2222-4222-8222-222222222222",
       "licenseNumber": "OR-RET-00287",
       "name": "Green Leaf Dispensary",
       "facilityType": "Retailer",
@@ -25,8 +25,8 @@
   ],
   "transfers": [
     {
-      "id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
-      "facilityId": "11111111-1111-1111-1111-111111111111",
+      "id": "ffffffff-ffff-4fff-bfff-ffffffffffff",
+      "facilityId": "11111111-1111-4111-8111-111111111111",
       "manifestNumber": "OR-MAN-EVAL-005",
       "shipperFacilityLicenseNumber": "OR-CUL-00142",
       "shipperFacilityName": "Emerald Valley Cultivation",
@@ -45,8 +45,8 @@
   ],
   "packages": [
     {
-      "id": "aa000000-0000-0000-0000-000000000001",
-      "facilityId": "11111111-1111-1111-1111-111111111111",
+      "id": "aa000000-0000-4000-8000-000000000001",
+      "facilityId": "11111111-1111-4111-8111-111111111111",
       "tag": "1A4010300003B01-EVAL-CLEAN-001",
       "itemName": "Blue Dream - Flower",
       "itemCategory": "Flower",
@@ -58,9 +58,9 @@
   ],
   "labTests": [
     {
-      "id": "bb000000-0000-0000-0000-000000000001",
-      "facilityId": "11111111-1111-1111-1111-111111111111",
-      "packageId": "aa000000-0000-0000-0000-000000000001",
+      "id": "bb000000-0000-4000-8000-000000000001",
+      "facilityId": "11111111-1111-4111-8111-111111111111",
+      "packageId": "aa000000-0000-4000-8000-000000000001",
       "testType": "Potency",
       "overallPassed": true,
       "resultDate": "2024-06-10T00:00:00Z",

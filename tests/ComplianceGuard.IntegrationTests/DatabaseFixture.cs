@@ -14,8 +14,8 @@ public class DatabaseFixture : IAsyncLifetime
 
     public string ConnectionString => _container.GetConnectionString();
 
-    public static readonly Guid FacilityA_Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-    public static readonly Guid FacilityB_Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    public static readonly Guid FacilityA_Id = Guid.Parse("aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa");
+    public static readonly Guid FacilityB_Id = Guid.Parse("bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb");
 
     public async Task InitializeAsync()
     {

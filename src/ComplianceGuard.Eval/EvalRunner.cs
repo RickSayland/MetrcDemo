@@ -117,7 +117,7 @@ public class EvalRunner
             {
                 var pkgLabTests = labTests.Where(lt => lt.PackageId == pkg.Id).ToList();
                 var pkgAnomalies = await _detectionService.AnalyzePackageHistoryAsync(
-                    pkg, transfers, pkgLabTests);
+                    pkg, transfers, pkgLabTests, facilities);
                 detectedAnomalies.AddRange(pkgAnomalies);
             }
         }

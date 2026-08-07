@@ -65,7 +65,7 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
 
     public async Task<IReadOnlyList<AnomalyFlag>> AnalyzePackageHistoryAsync(
         Package package, IReadOnlyList<Transfer> transfers,
-        IReadOnlyList<LabTest> labTests, CancellationToken ct = default)
+        IReadOnlyList<LabTest> labTests, IReadOnlyList<Facility> facilities, CancellationToken ct = default)
     {
         var packageDto = new PackageLabDto
         {
@@ -82,8 +82,8 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         };
 
         var packagesJson = JsonSerializer.Serialize(new[] { packageDto });
-        var emptyLookup = new Dictionary<string, Facility>();
-        var transfersJson = JsonSerializer.Serialize(transfers.Select(t => MapToDto(t, emptyLookup)).ToList());
+        var facilityLookup = facilities.ToDictionary(f => f.LicenseNumber);
+        var transfersJson = JsonSerializer.Serialize(transfers.Select(t => MapToDto(t, facilityLookup)).ToList());
         List<AnomalyResult> allResults;
 
         if (_hasLlm)

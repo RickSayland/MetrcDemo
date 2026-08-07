@@ -9,7 +9,7 @@ public class RecordTransferHandlerTests
 {
     private readonly Mock<ITransferRepository> _repoMock = new();
     private readonly Mock<ITenantContext> _tenantMock = new();
-    private readonly Guid _tenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    private readonly Guid _tenantId = Guid.Parse("aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa");
 
     private RecordTransferHandler CreateHandler()
     {

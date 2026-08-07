@@ -255,7 +255,7 @@ public class TenantIsolationTests
     [Fact]
     public async Task QueryWithWrongTenant_ReturnsEmpty()
     {
-        var nonexistentTenantId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        var nonexistentTenantId = Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
 
         await using var db = _fixture.CreateContext(nonexistentTenantId);
 
