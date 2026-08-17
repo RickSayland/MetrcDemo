@@ -1,4 +1,3 @@
-using ComplianceGuard.Infrastructure.Ai.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,8 +23,6 @@ public static class SemanticKernelFactory
         {
             builder.AddOpenAIChatCompletion(modelId, openAiKey);
         }
-
-        builder.Plugins.AddFromType<CustodyAnomalyPlugin>();
 
         return builder.Build();
     }

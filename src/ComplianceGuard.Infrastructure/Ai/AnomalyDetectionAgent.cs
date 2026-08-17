@@ -19,15 +19,14 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         You are a cannabis supply chain compliance analyst. Your job is to analyze
         transfer and package data for regulatory violations and suspicious activity.
 
-        You have access to detection functions. Call the appropriate ones based on the
-        data provided. Consider:
+        You have access to detection functions that are already loaded with the data.
+        Call the appropriate ones based on what checks are relevant. Consider:
         - Timing gaps that suggest diversion or unauthorized stops
         - Physically impossible transit speeds that indicate manifest fraud
         - Package count mismatches that suggest theft or loss
         - Missing lab tests that are regulatory violations
 
-        Analyze ALL the data provided and call every relevant detection function.
-        After calling the functions, summarize any anomalies found.
+        Call every relevant detection function, then summarize any anomalies found.
         """;
 
     public AnomalyDetectionAgent(Kernel kernel, ILogger<AnomalyDetectionAgent> logger)
@@ -52,12 +51,11 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
 
         if (_hasLlm)
         {
-            allResults = await RunWithLlmAsync(
-                $"Analyze these transfers for compliance issues:\n{transfersJson}", ct);
+            allResults = await RunWithLlmAsync(transfersJson, null, ct);
         }
         else
         {
-            allResults = await RunDirectAsync(transfersJson, ct);
+            allResults = await new CustodyAnomalyPlugin(transfersJson).RunAllTransferChecksAsync();
         }
 
         return allResults.Select(r => ToAnomalyFlag(r, facilityId)).ToList();
@@ -88,25 +86,30 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
 
         if (_hasLlm)
         {
-            allResults = await RunWithLlmAsync(
-                $"Analyze this package and its transfer history:\nPackages: {packagesJson}\nTransfers: {transfersJson}", ct);
+            allResults = await RunWithLlmAsync(transfersJson, packagesJson, ct);
         }
         else
         {
-            allResults = await RunDirectPackageAsync(packagesJson, transfersJson, ct);
+            var plugin = new CustodyAnomalyPlugin(transfersJson, packagesJson);
+            var labJson = await plugin.DetectLabTestAnomalyAsync();
+            allResults = JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonDefaults.CaseInsensitive) ?? [];
         }
 
         return allResults.Select(r => ToAnomalyFlag(r, package.FacilityId)).ToList();
     }
 
-    private async Task<List<AnomalyResult>> RunWithLlmAsync(string userMessage, CancellationToken ct)
+    private async Task<List<AnomalyResult>> RunWithLlmAsync(
+        string transfersJson, string? packagesJson, CancellationToken ct)
     {
         _logger.LogInformation("Running anomaly detection with LLM orchestration");
 
-        var chatService = _kernel.GetRequiredService<IChatCompletionService>();
+        var scopedKernel = _kernel.Clone();
+        scopedKernel.Plugins.AddFromObject(new CustodyAnomalyPlugin(transfersJson, packagesJson));
+
+        var chatService = scopedKernel.GetRequiredService<IChatCompletionService>();
         var history = new ChatHistory();
         history.AddSystemMessage(SystemPrompt);
-        history.AddUserMessage(userMessage);
+        history.AddUserMessage("Run all relevant compliance checks on the loaded data and report any anomalies.");
 
         var settings = new OpenAIPromptExecutionSettings
         {
@@ -114,31 +117,11 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         };
 
         var response = await chatService.GetChatMessageContentAsync(
-            history, settings, _kernel, ct);
+            history, settings, scopedKernel, ct);
 
         _logger.LogInformation("LLM response: {Response}", response.Content);
 
         return ExtractResultsFromFunctionCalls(history);
-    }
-
-    private async Task<List<AnomalyResult>> RunDirectAsync(string transfersJson, CancellationToken ct)
-    {
-        _logger.LogInformation("Running anomaly detection in direct mode (no LLM configured)");
-        return await new CustodyAnomalyPlugin().RunAllTransferChecksAsync(transfersJson);
-    }
-
-    private async Task<List<AnomalyResult>> RunDirectPackageAsync(
-        string packagesJson, string transfersJson, CancellationToken ct)
-    {
-        _logger.LogInformation("Running package anomaly detection in direct mode (no LLM configured)");
-
-        var plugin = new CustodyAnomalyPlugin();
-        var results = new List<AnomalyResult>();
-
-        var labJson = await plugin.DetectLabTestAnomalyAsync(packagesJson);
-        results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonDefaults.CaseInsensitive) ?? []);
-
-        return results;
     }
 
     private List<AnomalyResult> ExtractResultsFromFunctionCalls(ChatHistory history)

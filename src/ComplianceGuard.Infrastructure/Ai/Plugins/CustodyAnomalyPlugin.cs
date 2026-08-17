@@ -7,16 +7,24 @@ namespace ComplianceGuard.Infrastructure.Ai.Plugins;
 
 public class CustodyAnomalyPlugin
 {
+    private readonly List<TransferDto> _transfers;
+    private readonly List<PackageLabDto> _packages;
+
+    public CustodyAnomalyPlugin(string transfersJson, string? packagesJson = null)
+    {
+        _transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
+        _packages = packagesJson is not null
+            ? JsonSerializer.Deserialize<List<PackageLabDto>>(packagesJson, JsonDefaults.CaseInsensitive) ?? []
+            : [];
+    }
 
     [KernelFunction("detect_transfer_timing_gap")]
-    [Description("Detects suspicious timing gaps between transfer departure and arrival. Input is a JSON array of transfer objects.")]
-    public Task<string> DetectTransferTimingGapAsync(
-        [Description("JSON array of transfers with EstimatedDepartureAt, EstimatedArrivalAt, ActualDepartureAt, ActualArrivalAt")] string transfersJson)
+    [Description("Detects suspicious timing gaps between transfer departure and arrival that suggest diversion or unauthorized stops.")]
+    public Task<string> DetectTransferTimingGapAsync()
     {
-        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
-        foreach (var t in transfers)
+        foreach (var t in _transfers)
         {
             if (t.ActualDepartureAt is null || t.ActualArrivalAt is null)
                 continue;
@@ -56,14 +64,12 @@ public class CustodyAnomalyPlugin
     }
 
     [KernelFunction("detect_facility_distance_violation")]
-    [Description("Detects transfers between facilities that are geographically impossible given the transit time. Input is a JSON array of transfer objects with facility coordinates.")]
-    public Task<string> DetectFacilityDistanceViolationAsync(
-        [Description("JSON array of transfers with facility coordinates and actual departure/arrival times")] string transfersJson)
+    [Description("Detects transfers between facilities that are geographically impossible given the transit time, suggesting manifest fraud.")]
+    public Task<string> DetectFacilityDistanceViolationAsync()
     {
-        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
-        foreach (var t in transfers)
+        foreach (var t in _transfers)
         {
             if (t.ActualDepartureAt is null || t.ActualArrivalAt is null)
                 continue;
@@ -96,14 +102,12 @@ public class CustodyAnomalyPlugin
     }
 
     [KernelFunction("detect_package_quantity_discrepancy")]
-    [Description("Detects quantity mismatches between manifested package count and actual packages in a transfer. Input is a JSON array of transfer objects.")]
-    public Task<string> DetectPackageQuantityDiscrepancyAsync(
-        [Description("JSON array of transfers with PackageCount (manifested) and ActualPackageCount (received)")] string transfersJson)
+    [Description("Detects quantity mismatches between manifested package count and actual packages received in a transfer.")]
+    public Task<string> DetectPackageQuantityDiscrepancyAsync()
     {
-        var transfers = JsonSerializer.Deserialize<List<TransferDto>>(transfersJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
-        foreach (var t in transfers)
+        foreach (var t in _transfers)
         {
             if (t.ActualPackageCount is null)
                 continue;
@@ -131,14 +135,12 @@ public class CustodyAnomalyPlugin
     }
 
     [KernelFunction("detect_lab_test_anomaly")]
-    [Description("Detects packages transferred without passing lab tests — a regulatory violation. Input is JSON with packages, their lab tests, and associated transfers.")]
-    public Task<string> DetectLabTestAnomalyAsync(
-        [Description("JSON array of package objects with LabTestStatus, lab test results, and transfer associations")] string packagesJson)
+    [Description("Detects packages that were transferred without passing required lab tests — a regulatory violation.")]
+    public Task<string> DetectLabTestAnomalyAsync()
     {
-        var packages = JsonSerializer.Deserialize<List<PackageLabDto>>(packagesJson, JsonDefaults.CaseInsensitive) ?? [];
         var anomalies = new List<AnomalyResult>();
 
-        foreach (var pkg in packages)
+        foreach (var pkg in _packages)
         {
             if (!pkg.HasBeenTransferred)
                 continue;
@@ -165,17 +167,17 @@ public class CustodyAnomalyPlugin
         return Task.FromResult(JsonSerializer.Serialize(anomalies));
     }
 
-    public async Task<List<AnomalyResult>> RunAllTransferChecksAsync(string transfersJson)
+    public async Task<List<AnomalyResult>> RunAllTransferChecksAsync()
     {
         var results = new List<AnomalyResult>();
 
-        var timingJson = await DetectTransferTimingGapAsync(transfersJson);
+        var timingJson = await DetectTransferTimingGapAsync();
         results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(timingJson, JsonDefaults.CaseInsensitive) ?? []);
 
-        var distanceJson = await DetectFacilityDistanceViolationAsync(transfersJson);
+        var distanceJson = await DetectFacilityDistanceViolationAsync();
         results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(distanceJson, JsonDefaults.CaseInsensitive) ?? []);
 
-        var quantityJson = await DetectPackageQuantityDiscrepancyAsync(transfersJson);
+        var quantityJson = await DetectPackageQuantityDiscrepancyAsync();
         results.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(quantityJson, JsonDefaults.CaseInsensitive) ?? []);
 
         return results;

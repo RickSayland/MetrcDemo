@@ -5,7 +5,6 @@ namespace ComplianceGuard.UnitTests;
 
 public class CustodyAnomalyPluginTests
 {
-    private readonly CustodyAnomalyPlugin _plugin = new();
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     // --- Transfer Timing Gap ---
@@ -13,12 +12,9 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectTimingGap_72HourDelayOn2HourRoute_ReturnsHighAnomaly()
     {
-        var transfers = Json(new[]
-        {
-            MakeTransfer(estimatedHours: 2, actualHours: 72)
-        });
+        var plugin = MakeTransferPlugin(MakeTransfer(estimatedHours: 2, actualHours: 72));
 
-        var results = await DeserializeResults(_plugin.DetectTransferTimingGapAsync(transfers));
+        var results = await DeserializeResults(plugin.DetectTransferTimingGapAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Equal("TransferTimingGap", anomaly.AnomalyType);
@@ -28,12 +24,9 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectTimingGap_ModerateDelay_ReturnsMediumAnomaly()
     {
-        var transfers = Json(new[]
-        {
-            MakeTransfer(estimatedHours: 2, actualHours: 8)
-        });
+        var plugin = MakeTransferPlugin(MakeTransfer(estimatedHours: 2, actualHours: 8));
 
-        var results = await DeserializeResults(_plugin.DetectTransferTimingGapAsync(transfers));
+        var results = await DeserializeResults(plugin.DetectTransferTimingGapAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Equal("Medium", anomaly.Severity);
@@ -42,12 +35,9 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectTimingGap_NormalTransit_ReturnsEmpty()
     {
-        var transfers = Json(new[]
-        {
-            MakeTransfer(estimatedHours: 2, actualHours: 2.5)
-        });
+        var plugin = MakeTransferPlugin(MakeTransfer(estimatedHours: 2, actualHours: 2.5));
 
-        var results = await DeserializeResults(_plugin.DetectTransferTimingGapAsync(transfers));
+        var results = await DeserializeResults(plugin.DetectTransferTimingGapAsync());
 
         Assert.Empty(results);
     }
@@ -55,11 +45,10 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectTimingGap_NoActualArrival_SkipsTransfer()
     {
-        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 0);
-        transfer = transfer with { ActualArrivalAt = null };
-        var transfers = Json(new[] { transfer });
+        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 0) with { ActualArrivalAt = null };
+        var plugin = MakeTransferPlugin(transfer);
 
-        var results = await DeserializeResults(_plugin.DetectTransferTimingGapAsync(transfers));
+        var results = await DeserializeResults(plugin.DetectTransferTimingGapAsync());
 
         Assert.Empty(results);
     }
@@ -81,9 +70,9 @@ public class CustodyAnomalyPluginTests
             EstimatedArrivalAt = DateTime.UtcNow.AddHours(10),
             PackageCount = 1
         };
+        var plugin = MakeTransferPlugin(transfer);
 
-        var results = await DeserializeResults(
-            _plugin.DetectFacilityDistanceViolationAsync(Json(new[] { transfer })));
+        var results = await DeserializeResults(plugin.DetectFacilityDistanceViolationAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Equal("FacilityDistanceViolation", anomaly.AnomalyType);
@@ -105,9 +94,9 @@ public class CustodyAnomalyPluginTests
             EstimatedArrivalAt = DateTime.UtcNow.AddHours(2),
             PackageCount = 1
         };
+        var plugin = MakeTransferPlugin(transfer);
 
-        var results = await DeserializeResults(
-            _plugin.DetectFacilityDistanceViolationAsync(Json(new[] { transfer })));
+        var results = await DeserializeResults(plugin.DetectFacilityDistanceViolationAsync());
 
         Assert.Empty(results);
     }
@@ -117,11 +106,10 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectQuantityDiscrepancy_3MissingFrom50_ReturnsAnomaly()
     {
-        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 2.5);
-        transfer = transfer with { PackageCount = 50, ActualPackageCount = 47 };
+        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 2.5) with { PackageCount = 50, ActualPackageCount = 47 };
+        var plugin = MakeTransferPlugin(transfer);
 
-        var results = await DeserializeResults(
-            _plugin.DetectPackageQuantityDiscrepancyAsync(Json(new[] { transfer })));
+        var results = await DeserializeResults(plugin.DetectPackageQuantityDiscrepancyAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Equal("PackageQuantityDiscrepancy", anomaly.AnomalyType);
@@ -130,11 +118,10 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectQuantityDiscrepancy_AllAccountedFor_ReturnsEmpty()
     {
-        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 2.5);
-        transfer = transfer with { PackageCount = 10, ActualPackageCount = 10 };
+        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 2.5) with { PackageCount = 10, ActualPackageCount = 10 };
+        var plugin = MakeTransferPlugin(transfer);
 
-        var results = await DeserializeResults(
-            _plugin.DetectPackageQuantityDiscrepancyAsync(Json(new[] { transfer })));
+        var results = await DeserializeResults(plugin.DetectPackageQuantityDiscrepancyAsync());
 
         Assert.Empty(results);
     }
@@ -142,11 +129,10 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectQuantityDiscrepancy_LargeShortage_ReturnsCritical()
     {
-        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 2.5);
-        transfer = transfer with { PackageCount = 20, ActualPackageCount = 10 };
+        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 2.5) with { PackageCount = 20, ActualPackageCount = 10 };
+        var plugin = MakeTransferPlugin(transfer);
 
-        var results = await DeserializeResults(
-            _plugin.DetectPackageQuantityDiscrepancyAsync(Json(new[] { transfer })));
+        var results = await DeserializeResults(plugin.DetectPackageQuantityDiscrepancyAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Equal("Critical", anomaly.Severity);
@@ -157,18 +143,15 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectLabTestAnomaly_TransferredWithNoTests_ReturnsCritical()
     {
-        var packages = Json(new[]
+        var plugin = MakePackagePlugin(new PackageLabDto
         {
-            new PackageLabDto
-            {
-                PackageId = Guid.NewGuid(),
-                Tag = "TEST-PKG-001",
-                HasBeenTransferred = true,
-                LabTests = []
-            }
+            PackageId = Guid.NewGuid(),
+            Tag = "TEST-PKG-001",
+            HasBeenTransferred = true,
+            LabTests = []
         });
 
-        var results = await DeserializeResults(_plugin.DetectLabTestAnomalyAsync(packages));
+        var results = await DeserializeResults(plugin.DetectLabTestAnomalyAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Equal("MissingLabTest", anomaly.AnomalyType);
@@ -179,18 +162,15 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectLabTestAnomaly_TransferredWithFailedTests_ReturnsCritical()
     {
-        var packages = Json(new[]
+        var plugin = MakePackagePlugin(new PackageLabDto
         {
-            new PackageLabDto
-            {
-                PackageId = Guid.NewGuid(),
-                Tag = "TEST-PKG-002",
-                HasBeenTransferred = true,
-                LabTests = [new LabTestDto { TestType = "Potency", OverallPassed = false, ResultDate = DateTime.UtcNow }]
-            }
+            PackageId = Guid.NewGuid(),
+            Tag = "TEST-PKG-002",
+            HasBeenTransferred = true,
+            LabTests = [new LabTestDto { TestType = "Potency", OverallPassed = false, ResultDate = DateTime.UtcNow }]
         });
 
-        var results = await DeserializeResults(_plugin.DetectLabTestAnomalyAsync(packages));
+        var results = await DeserializeResults(plugin.DetectLabTestAnomalyAsync());
 
         var anomaly = Assert.Single(results);
         Assert.Contains("no passing lab test", anomaly.Description);
@@ -199,18 +179,15 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectLabTestAnomaly_TransferredWithPassingTest_ReturnsEmpty()
     {
-        var packages = Json(new[]
+        var plugin = MakePackagePlugin(new PackageLabDto
         {
-            new PackageLabDto
-            {
-                PackageId = Guid.NewGuid(),
-                Tag = "TEST-PKG-003",
-                HasBeenTransferred = true,
-                LabTests = [new LabTestDto { TestType = "Potency", OverallPassed = true, ResultDate = DateTime.UtcNow }]
-            }
+            PackageId = Guid.NewGuid(),
+            Tag = "TEST-PKG-003",
+            HasBeenTransferred = true,
+            LabTests = [new LabTestDto { TestType = "Potency", OverallPassed = true, ResultDate = DateTime.UtcNow }]
         });
 
-        var results = await DeserializeResults(_plugin.DetectLabTestAnomalyAsync(packages));
+        var results = await DeserializeResults(plugin.DetectLabTestAnomalyAsync());
 
         Assert.Empty(results);
     }
@@ -218,18 +195,15 @@ public class CustodyAnomalyPluginTests
     [Fact]
     public async Task DetectLabTestAnomaly_NotTransferred_SkipsPackage()
     {
-        var packages = Json(new[]
+        var plugin = MakePackagePlugin(new PackageLabDto
         {
-            new PackageLabDto
-            {
-                PackageId = Guid.NewGuid(),
-                Tag = "TEST-PKG-004",
-                HasBeenTransferred = false,
-                LabTests = []
-            }
+            PackageId = Guid.NewGuid(),
+            Tag = "TEST-PKG-004",
+            HasBeenTransferred = false,
+            LabTests = []
         });
 
-        var results = await DeserializeResults(_plugin.DetectLabTestAnomalyAsync(packages));
+        var results = await DeserializeResults(plugin.DetectLabTestAnomalyAsync());
 
         Assert.Empty(results);
     }
@@ -251,7 +225,11 @@ public class CustodyAnomalyPluginTests
         };
     }
 
-    private static string Json<T>(T obj) => JsonSerializer.Serialize(obj);
+    private static CustodyAnomalyPlugin MakeTransferPlugin(params TransferDto[] transfers)
+        => new(JsonSerializer.Serialize(transfers));
+
+    private static CustodyAnomalyPlugin MakePackagePlugin(params PackageLabDto[] packages)
+        => new("[]", JsonSerializer.Serialize(packages));
 
     private static async Task<List<AnomalyResult>> DeserializeResults(Task<string> task)
     {
