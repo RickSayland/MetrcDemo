@@ -11,12 +11,14 @@ public class DapperTransferRepository : ITransferRepository
 {
     private readonly string _connectionString;
     private readonly ITenantContext _tenantContext;
+    private readonly AppDbContext _db;
 
-    public DapperTransferRepository(IConfiguration configuration, ITenantContext tenantContext)
+    public DapperTransferRepository(IConfiguration configuration, ITenantContext tenantContext, AppDbContext db)
     {
         _connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("Connection string 'Default' not configured.");
         _tenantContext = tenantContext;
+        _db = db;
     }
 
     public async Task<Transfer?> GetByIdAsync(Guid id, CancellationToken ct = default)
@@ -81,25 +83,8 @@ public class DapperTransferRepository : ITransferRepository
 
     public async Task AddAsync(Transfer transfer, CancellationToken ct = default)
     {
-        const string sql = """
-            INSERT INTO Transfers
-                (Id, FacilityId, ManifestNumber,
-                 ShipperFacilityLicenseNumber, ShipperFacilityName,
-                 RecipientFacilityLicenseNumber, RecipientFacilityName,
-                 TransporterName, DriverName, VehicleLicensePlate,
-                 PackageCount, EstimatedDepartureAt, EstimatedArrivalAt,
-                 ActualDepartureAt, ActualArrivalAt, Status, CreatedAt)
-            VALUES
-                (@Id, @FacilityId, @ManifestNumber,
-                 @ShipperFacilityLicenseNumber, @ShipperFacilityName,
-                 @RecipientFacilityLicenseNumber, @RecipientFacilityName,
-                 @TransporterName, @DriverName, @VehicleLicensePlate,
-                 @PackageCount, @EstimatedDepartureAt, @EstimatedArrivalAt,
-                 @ActualDepartureAt, @ActualArrivalAt, @Status, @CreatedAt)
-            """;
-
-        using var connection = CreateConnection();
-        await connection.ExecuteAsync(sql, transfer);
+        _db.Transfers.Add(transfer);
+        await _db.SaveChangesAsync(ct);
     }
 
     private IDbConnection CreateConnection() => new SqlConnection(_connectionString);
