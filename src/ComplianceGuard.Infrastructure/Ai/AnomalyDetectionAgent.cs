@@ -91,8 +91,9 @@ public class AnomalyDetectionAgent : IAnomalyDetectionService
         else
         {
             var plugin = new CustodyAnomalyPlugin(transfersJson, packagesJson);
+            allResults = await plugin.RunAllTransferChecksAsync();
             var labJson = await plugin.DetectLabTestAnomalyAsync();
-            allResults = JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonDefaults.CaseInsensitive) ?? [];
+            allResults.AddRange(JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonDefaults.CaseInsensitive) ?? []);
         }
 
         return allResults.Select(r => ToAnomalyFlag(r, package.FacilityId)).ToList();

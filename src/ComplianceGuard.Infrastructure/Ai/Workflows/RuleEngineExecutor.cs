@@ -11,7 +11,19 @@ internal sealed partial class RuleEngineExecutor() : Executor("RuleEngineExecuto
         ComplianceScanRequest request, IWorkflowContext context)
     {
         var transfersJson = JsonSerializer.Serialize(request.Transfers);
-        var allAnomalies = await new CustodyAnomalyPlugin(transfersJson).RunAllTransferChecksAsync();
+        var packagesJson = request.Packages is { Count: > 0 }
+            ? JsonSerializer.Serialize(request.Packages)
+            : null;
+        var plugin = new CustodyAnomalyPlugin(transfersJson, packagesJson);
+        var allAnomalies = await plugin.RunAllTransferChecksAsync();
+
+        if (packagesJson is not null)
+        {
+            var labJson = await plugin.DetectLabTestAnomalyAsync();
+            allAnomalies.AddRange(
+                JsonSerializer.Deserialize<List<AnomalyResult>>(labJson, JsonDefaults.CaseInsensitive) ?? []);
+        }
+
         return new ComplianceCheckResult(allAnomalies, request.Transfers, request.FacilityId);
     }
 }

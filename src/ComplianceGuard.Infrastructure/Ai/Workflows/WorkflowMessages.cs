@@ -4,7 +4,8 @@ namespace ComplianceGuard.Infrastructure.Ai.Workflows;
 
 public record ComplianceScanRequest(
     List<TransferDto> Transfers,
-    Guid FacilityId);
+    Guid FacilityId,
+    List<PackageLabDto>? Packages = null);
 
 public record ComplianceCheckResult(
     List<AnomalyResult> Anomalies,

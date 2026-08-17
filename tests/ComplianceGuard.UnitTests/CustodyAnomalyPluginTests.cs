@@ -208,6 +208,51 @@ public class CustodyAnomalyPluginTests
         Assert.Empty(results);
     }
 
+    // --- RunAllTransferChecksAsync ---
+
+    [Fact]
+    public async Task RunAllTransferChecks_ReturnsTransferAnomaliesOnly()
+    {
+        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 72);
+        var package = new PackageLabDto
+        {
+            PackageId = Guid.NewGuid(),
+            Tag = "TEST-PKG-ALL",
+            HasBeenTransferred = true,
+            LabTests = []
+        };
+        var plugin = new CustodyAnomalyPlugin(
+            JsonSerializer.Serialize(new[] { transfer }),
+            JsonSerializer.Serialize(new[] { package }));
+
+        var results = await plugin.RunAllTransferChecksAsync();
+
+        Assert.Contains(results, r => r.AnomalyType == "TransferTimingGap");
+        Assert.DoesNotContain(results, r => r.AnomalyType == "MissingLabTest");
+    }
+
+    [Fact]
+    public async Task LabAndTransferChecks_CalledSeparately_FindBothTypes()
+    {
+        var transfer = MakeTransfer(estimatedHours: 2, actualHours: 72);
+        var package = new PackageLabDto
+        {
+            PackageId = Guid.NewGuid(),
+            Tag = "TEST-PKG-ALL",
+            HasBeenTransferred = true,
+            LabTests = []
+        };
+        var plugin = new CustodyAnomalyPlugin(
+            JsonSerializer.Serialize(new[] { transfer }),
+            JsonSerializer.Serialize(new[] { package }));
+
+        var transferResults = await plugin.RunAllTransferChecksAsync();
+        var labResults = await DeserializeResults(plugin.DetectLabTestAnomalyAsync());
+
+        Assert.Contains(transferResults, r => r.AnomalyType == "TransferTimingGap");
+        Assert.Contains(labResults, r => r.AnomalyType == "MissingLabTest");
+    }
+
     // --- Helpers ---
 
     private static TransferDto MakeTransfer(double estimatedHours, double actualHours)

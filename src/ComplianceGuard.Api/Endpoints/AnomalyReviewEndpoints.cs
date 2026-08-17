@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ComplianceGuard.Application.Anomalies;
 using ComplianceGuard.Domain.Entities;
 using ComplianceGuard.Infrastructure.Ai;
@@ -53,16 +54,59 @@ public static class AnomalyReviewEndpoints
                 .ToListAsync();
 
             var facilities = await db.Facilities.ToListAsync();
+            var allFlags = new List<AnomalyFlag>();
 
-            var anomalies = await detectionService.AnalyzeTransfersAsync(transfers, facilities);
+            var transferFlags = await detectionService.AnalyzeTransfersAsync(transfers, facilities);
+            allFlags.AddRange(transferFlags);
 
-            if (anomalies.Count > 0)
+            var transferredPackageIds = transfers
+                .SelectMany(t => t.TransferPackages)
+                .Select(tp => tp.PackageId)
+                .Distinct()
+                .ToList();
+
+            var packages = await db.Packages
+                .Where(p => transferredPackageIds.Contains(p.Id))
+                .ToListAsync();
+
+            var packageDtos = new List<PackageLabDto>();
+            foreach (var pkg in packages)
             {
-                db.AnomalyFlags.AddRange(anomalies);
+                var labTests = await db.LabTests
+                    .Where(lt => lt.PackageId == pkg.Id)
+                    .ToListAsync();
+
+                packageDtos.Add(new PackageLabDto
+                {
+                    PackageId = pkg.Id,
+                    Tag = pkg.Tag,
+                    LabTestStatus = pkg.LabTestStatus,
+                    HasBeenTransferred = true,
+                    LabTests = labTests.Select(lt => new LabTestDto
+                    {
+                        TestType = lt.TestType,
+                        OverallPassed = lt.OverallPassed,
+                        ResultDate = lt.ResultDate
+                    }).ToList()
+                });
+            }
+
+            if (packageDtos.Count > 0)
+            {
+                var packagesJson = JsonSerializer.Serialize(packageDtos);
+                var labResultsJson = await new CustodyAnomalyPlugin("[]", packagesJson).DetectLabTestAnomalyAsync();
+                var labResults = JsonSerializer.Deserialize<List<AnomalyResult>>(labResultsJson, JsonDefaults.CaseInsensitive) ?? [];
+                var facilityId = transfers[0].FacilityId;
+                allFlags.AddRange(labResults.Select(r => AnomalyDetectionAgent.ToAnomalyFlag(r, facilityId)));
+            }
+
+            if (allFlags.Count > 0)
+            {
+                db.AnomalyFlags.AddRange(allFlags);
                 await db.SaveChangesAsync();
             }
 
-            return Results.Ok(new ScanResponse(anomalies.Count, anomalies.Select(ToResponse).ToList()));
+            return Results.Ok(new ScanResponse(allFlags.Count, allFlags.Select(ToResponse).ToList()));
         });
 
         group.MapPost("/workflow-scan", async (Workflow workflow, AppDbContext db) =>
@@ -80,7 +124,38 @@ public static class AnomalyReviewEndpoints
                 .Select(t => AnomalyDetectionAgent.MapToDto(t, facilityLookup))
                 .ToList();
 
-            var scanRequest = new ComplianceScanRequest(transferDtos, facilityId);
+            var transferredPackageIds = transfers
+                .SelectMany(t => t.TransferPackages)
+                .Select(tp => tp.PackageId)
+                .Distinct()
+                .ToList();
+
+            var packageDtos = new List<PackageLabDto>();
+            foreach (var pkgId in transferredPackageIds)
+            {
+                var pkg = await db.Packages.FindAsync(pkgId);
+                if (pkg is null) continue;
+
+                var labTests = await db.LabTests
+                    .Where(lt => lt.PackageId == pkgId)
+                    .ToListAsync();
+
+                packageDtos.Add(new PackageLabDto
+                {
+                    PackageId = pkg.Id,
+                    Tag = pkg.Tag,
+                    LabTestStatus = pkg.LabTestStatus,
+                    HasBeenTransferred = true,
+                    LabTests = labTests.Select(lt => new LabTestDto
+                    {
+                        TestType = lt.TestType,
+                        OverallPassed = lt.OverallPassed,
+                        ResultDate = lt.ResultDate
+                    }).ToList()
+                });
+            }
+
+            var scanRequest = new ComplianceScanRequest(transferDtos, facilityId, packageDtos);
 
             var run = await InProcessExecution.RunAsync(workflow, scanRequest);
 
