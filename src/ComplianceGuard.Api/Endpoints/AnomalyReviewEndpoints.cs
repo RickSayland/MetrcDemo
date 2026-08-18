@@ -100,13 +100,9 @@ public static class AnomalyReviewEndpoints
                 allFlags.AddRange(labResults.Select(r => AnomalyDetectionAgent.ToAnomalyFlag(r, facilityId)));
             }
 
-            if (allFlags.Count > 0)
-            {
-                db.AnomalyFlags.AddRange(allFlags);
-                await db.SaveChangesAsync();
-            }
+            var newFlags = await DeduplicateAndSaveAsync(allFlags, db);
 
-            return Results.Ok(new ScanResponse(allFlags.Count, allFlags.Select(ToResponse).ToList()));
+            return Results.Ok(new ScanResponse(newFlags.Count, newFlags.Select(ToResponse).ToList()));
         });
 
         group.MapPost("/workflow-scan", async (Workflow workflow, AppDbContext db) =>
@@ -173,21 +169,40 @@ public static class AnomalyReviewEndpoints
                 .Select(a => AnomalyDetectionAgent.ToAnomalyFlag(a, facilityId))
                 .ToList();
 
-            if (flags.Count > 0)
-            {
-                db.AnomalyFlags.AddRange(flags);
-                await db.SaveChangesAsync();
-            }
+            var newFlags = await DeduplicateAndSaveAsync(flags, db);
 
             return Results.Ok(new WorkflowScanResponse(
                 report.Status,
                 report.Summary,
-                flags.Count,
+                newFlags.Count,
                 report.RiskAssessment,
-                flags.Select(ToResponse).ToList()));
+                newFlags.Select(ToResponse).ToList()));
         });
 
         return routes;
+    }
+
+    private static async Task<List<AnomalyFlag>> DeduplicateAndSaveAsync(
+        List<AnomalyFlag> flags, AppDbContext db)
+    {
+        var existing = await db.AnomalyFlags
+            .Select(a => new { a.AnomalyType, a.TransferId, a.PackageId })
+            .ToListAsync();
+
+        var newFlags = flags
+            .Where(f => !existing.Any(e =>
+                e.AnomalyType == f.AnomalyType &&
+                e.TransferId == f.TransferId &&
+                e.PackageId == f.PackageId))
+            .ToList();
+
+        if (newFlags.Count > 0)
+        {
+            db.AnomalyFlags.AddRange(newFlags);
+            await db.SaveChangesAsync();
+        }
+
+        return newFlags;
     }
 
     private static AnomalyResponse ToResponse(AnomalyFlag a) => new(
